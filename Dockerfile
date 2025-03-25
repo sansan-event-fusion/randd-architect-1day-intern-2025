@@ -9,6 +9,7 @@ ARG DEBIAN_VERSION=bookworm
 #############################################
 FROM python:${PYTHON_VERSION}-${DEBIAN_VERSION} AS base
 ARG POETRY_VERSION
+ARG PYSETUP_PATH
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 ENV PIP_NO_CACHE_DIR=off \
@@ -17,7 +18,7 @@ ENV PIP_NO_CACHE_DIR=off \
 ENV POETRY_VERSION=${POETRY_VERSION} \
     POETRY_HOME="/opt/poetry" \
     POETRY_VIRTUALENVS_IN_PROJECT=true
-ENV PATH=${POETRY_HOME}/bin:$PATH
+ENV PATH=${POETRY_HOME}/bin:${PYSETUP_PATH}/.venv/bin:$PATH
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
@@ -27,15 +28,27 @@ RUN apt-get update \
 RUN curl -sSL https://install.python-poetry.org | python3 -
 
 #############################################
+# 開発用ステージ
+# 開発環境を構築する
+#############################################
+FROM base AS dev
+ARG PYSETUP_PATH
+SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
+WORKDIR ${PYSETUP_PATH}
+COPY pyproject.toml poetry.lock* README.md ./
+RUN poetry install
+WORKDIR /app
+CMD [ "streamlit", "run", "app/main.py" ]
+
+#############################################
 # build 用ステージ
-# プロジェクトのビルドをするためのイメージ
+# プロジェクトのビルドをする
 #############################################
 FROM base AS build
 ARG PYSETUP_PATH
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 WORKDIR ${PYSETUP_PATH}
 COPY pyproject.toml poetry.lock* README.md ./
-COPY app/ app/
 RUN poetry install --only=main
 
 #############################################
@@ -44,10 +57,12 @@ RUN poetry install --only=main
 #############################################
 FROM python:${PYTHON_VERSION}-slim-${DEBIAN_VERSION} AS prod
 ARG PYSETUP_PATH
+ENV PATH="${PYSETUP_PATH}/.venv/bin:$PATH"
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
+COPY --from=build ${PYSETUP_PATH} ${PYSETUP_PATH}
 WORKDIR /app
-COPY --from=build ${PYSETUP_PATH} /app
-RUN sed -i 's|/opt/pysetup/.venv/bin/python|/app/.venv/bin/python|g' /app/.venv/bin/streamlit
-RUN useradd -m appuser
-USER appuser
-CMD ["/app/.venv/bin/streamlit", "run", "app/main.py"]
+COPY app/ app/
+COPY .streamlit/ .streamlit/
+USER 1000  # non-root user
+EXPOSE 8080
+CMD ["streamlit", "run", "app/main.py"]
