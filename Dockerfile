@@ -1,77 +1,53 @@
-FROM python:3.10-slim as python-base
+ARG PYTHON_VERSION=3.10
+ARG POETRY_VERSION=1.8.5
+ARG PYSETUP_PATH="/opt/pysetup"
+ARG DEBIAN_VERSION=bookworm
 
-# python
+#############################################
+# base ステージ
+# ビルダーや開発環境の共通設定
+#############################################
+FROM python:${PYTHON_VERSION}-${DEBIAN_VERSION} AS base
+ARG POETRY_VERSION
 ENV PYTHONUNBUFFERED=1 \
-  \
-  # pip
-  PIP_NO_CACHE_DIR=off \
-  PIP_DISABLE_PIP_VERSION_CHECK=on \
-  PIP_DEFAULT_TIMEOUT=100 \
-  \
-  # poetry
-  # https://python-poetry.org/docs/configuration/#using-environment-variables
-  POETRY_VERSION=1.8.3 \
-  # make poetry install to this location
-  POETRY_HOME="/opt/poetry" \
-  # make poetry create the virtual environment in the project's root
-  # it gets named `.venv`
-  POETRY_VIRTUALENVS_IN_PROJECT=true \
-  # do not ask any interactive question
-  POETRY_NO_INTERACTION=1 \
-  \
-  # paths
-  # this is where our requirements + virtual environment will live
-  PYSETUP_PATH="/opt/pysetup" \
-  VENV_PATH="/opt/pysetup/.venv"
-
-# prepend poetry and venv to path
-ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
-
-
-# `builder-base` stage is used to build deps + create our virtual environment
-FROM python-base as builder-base
+    PYTHONDONTWRITEBYTECODE=1
+ENV PIP_NO_CACHE_DIR=off \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_DEFAULT_TIMEOUT=100
+ENV POETRY_VERSION=${POETRY_VERSION} \
+    POETRY_HOME="/opt/poetry" \
+    POETRY_VIRTUALENVS_IN_PROJECT=true
+ENV PATH=${POETRY_HOME}/bin:$PATH
+SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 RUN apt-get update \
-  && apt-get install --no-install-recommends -y \
-  # deps for installing poetry
-  curl \
-  # deps for building python deps
-  build-essential
+    && apt-get install --no-install-recommends -y \
+        curl \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+RUN curl -sSL https://install.python-poetry.org | python3 -
 
-# install poetry - respects $POETRY_VERSION & $POETRY_HOME
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN curl -sSL https://install.python-poetry.org | python -
+#############################################
+# build 用ステージ
+# プロジェクトのビルドをするためのイメージ
+#############################################
+FROM base AS build
+ARG PYSETUP_PATH
+SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
+WORKDIR ${PYSETUP_PATH}
+COPY pyproject.toml poetry.lock* README.md ./
+COPY app/ app/
+RUN poetry install --only=main
 
-# copy project requirement files here to ensure they will be cached.
-WORKDIR $PYSETUP_PATH
-# COPY <コピー元> <コピー元> ... <コピー元> <コピー先>
-COPY poetry.lock pyproject.toml ./
-
-# install runtime deps
-RUN poetry install --only main
-
-
-# `development` image is used during development / testing
-FROM python-base as development
-WORKDIR $PYSETUP_PATH
-
-# copy in our built poetry + venv
-COPY --from=builder-base $POETRY_HOME $POETRY_HOME
-COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
-
-# quicker install as runtime deps are already installed
-RUN poetry install --with dev
-
-# will become mountpoint of our code
+#############################################
+# production 用ステージ
+# ビルドした依存関係やソースを build ステージからコピーする (poetry は含まない)
+#############################################
+FROM python:${PYTHON_VERSION}-slim-${DEBIAN_VERSION} AS prod
+ARG PYSETUP_PATH
+SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 WORKDIR /app
-
-CMD ["streamlit", "run", "app/main.py"]
-
-
-# `production` image used for runtime
-FROM python-base as production
-
-COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
-COPY ./ /app
-WORKDIR /app
-
-CMD ["streamlit", "run", "app/main.py"]
+COPY --from=build ${PYSETUP_PATH} /app
+RUN sed -i 's|/opt/pysetup/.venv/bin/python|/app/.venv/bin/python|g' /app/.venv/bin/streamlit
+RUN useradd -m appuser
+USER appuser
+CMD ["/app/.venv/bin/streamlit", "run", "app/main.py"]
