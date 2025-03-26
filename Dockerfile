@@ -1,5 +1,5 @@
-ARG PYTHON_VERSION=3.10
-ARG POETRY_VERSION=1.8.5
+ARG PYTHON_VERSION=3.13
+ARG POETRY_VERSION=2.1.1
 ARG PYSETUP_PATH="/opt/pysetup"
 ARG DEBIAN_VERSION=bookworm
 
@@ -34,11 +34,10 @@ RUN curl -sSL https://install.python-poetry.org | python3 -
 FROM base AS dev
 ARG PYSETUP_PATH
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
-WORKDIR ${PYSETUP_PATH}
-COPY pyproject.toml poetry.lock* README.md ./
-RUN poetry install
 WORKDIR /app
-CMD [ "streamlit", "run", "app/main.py" ]
+COPY pyproject.toml poetry.lock* ./
+RUN poetry install
+CMD [ "poetry", "run", "streamlit", "run", "app/main.py" ]
 
 #############################################
 # build 用ステージ
@@ -48,7 +47,7 @@ FROM base AS build
 ARG PYSETUP_PATH
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 WORKDIR ${PYSETUP_PATH}
-COPY pyproject.toml poetry.lock* README.md ./
+COPY pyproject.toml poetry.lock* ./
 RUN poetry install --only=main
 
 #############################################
@@ -59,10 +58,10 @@ FROM python:${PYTHON_VERSION}-slim-${DEBIAN_VERSION} AS prod
 ARG PYSETUP_PATH
 ENV PATH="${PYSETUP_PATH}/.venv/bin:$PATH"
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
-COPY --from=build ${PYSETUP_PATH} ${PYSETUP_PATH}
+COPY --from=build ${PYSETUP_PATH}/.venv/ ${PYSETUP_PATH}/.venv/
 WORKDIR /app
 COPY app/ app/
 COPY .streamlit/ .streamlit/
-USER 1000  # non-root user
+USER 1000
 EXPOSE 8080
 CMD ["streamlit", "run", "app/main.py"]
