@@ -6,18 +6,18 @@ runs:
   steps:
     - name: Install Poetry
       shell: bash
-      run: pipx install poetry==2.1.1
+      run: pipx install poetry==2.1.2
 
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: "3.13"
+        python-version: "3.10"
         cache: "poetry"
 
     - name: Install dependencies
       shell: bash
       run: |
-        poetry env use 3.13
+        poetry env use 3.10
         poetry install --with dev
 
     - name: Set up Reviewdog
