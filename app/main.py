@@ -9,8 +9,8 @@ import plotly.express as px
 # タイトル
 st.title("新規事業開時に助けになりそうな人")
 
-#path = Path(__file__).parent / "dummy_data.csv"
-#df_dummy = pd.read_csv(path, dtype=str)
+# path = Path(__file__).parent / "dummy_data.csv"
+# df_dummy = pd.read_csv(path, dtype=str)
 
 #url = 'https://circuit-trial.stg.rd.ds.sansan.com/api/cards/count'
 #response = requests.get(url)
