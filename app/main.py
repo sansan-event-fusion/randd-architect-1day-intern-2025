@@ -73,12 +73,14 @@ top10 = ranking.head(15)
 assert len(top10) == 15, "Top 10のデータが取得できていません。"
 
 # Plotly グラフ表示
-fig = px.bar(top10,
-             x="user_id",
-             y="count",
-             title="Top 10 名刺を渡した人",
-             labels={"user_id": "User ID", "count": "渡した枚数"},
-             text="count")
+fig = px.bar(
+    top10,
+    x="user_id",
+    y="count",
+    title="Top 10 名刺を渡した人",
+    labels={"user_id": "User ID", "count": "渡した枚数"},
+    text="count",
+)
 fig.update_traces(textposition="outside")
 fig.update_layout(xaxis_tickangle=-45)
 
