@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from typing import Union
 
 import altair as alt
 import pandas as pd
