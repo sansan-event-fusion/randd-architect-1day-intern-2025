@@ -27,7 +27,8 @@ def get_similar_top10_user(user_id):
 # user_idを入力
 if "user_id_input" not in st.session_state:
     st.session_state.user_id_input = "9230809757"
-user_id = st.text_input("Enter User ID:", "2171722069", key="user_id_input")
+    user_id = st.session_state.user_id_input
+user_id = st.text_input("Enter User ID:", key="user_id_input")
 
 
 # user_idの候補をランダムに生成
@@ -35,7 +36,6 @@ def set_random_user_id():
     rng = np.random.default_rng()
     offset = rng.integers(0, 2000)
     st.session_state.user_id_input = get_user_id(offset)
-    # rerun は不要 — on_click 後に自動で再実行される
 
 
 st.button("Generate Random User ID", on_click=set_random_user_id)
@@ -52,6 +52,7 @@ names = []
 company_names = []
 phone_numbers = []
 similarlity_scores = []
+
 for i in range(len(top10_json)):
     res = requests.get(GeospatialUrl + top10_json[i]["address"], timeout=(3, 10))
     # 緯度経度を取得
