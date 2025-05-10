@@ -12,7 +12,7 @@ def get_random_user():
     count_business_card = int(response_count_business_card.content)
 
     # ユーザをランダムに選ぶ
-    user_index = random.randint(0, count_buisiness_card - 1)
+    user_index = random.randint(0, count_business_card - 1)
     url_user_card = f"https://circuit-trial.stg.rd.ds.sansan.com/api/cards/?offset={user_index}&limit=1"
     response_user_card = requests.get(url_user_card, timeout=10)
     user_card = response_user_card.json()[0]
