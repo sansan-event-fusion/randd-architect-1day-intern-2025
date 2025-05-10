@@ -52,7 +52,7 @@ TO
 """
 
 
-def display_graph(name: str, nodes=None):  # noqa: C901
+def display_graph(name: str, nodes=None):  # noqa: C901 これはロジックを大きく変える必要が出るので対応不可能
     key_toggle = f"show_graph_{name}"
 
     if name != "":
@@ -93,7 +93,8 @@ def display_graph(name: str, nodes=None):  # noqa: C901
         net.show_buttons(filter_=["physics"])
         net.save_graph(f"{name}.html")
 
-        with Path.open(f"{name}.html", encoding="utf-8") as f:
+        # with Path.open(f"{name}.html", encoding="utf-8") as f:
+        with Path(f"{name}.html").open(encoding="utf-8") as f:
             html_content = f.read()
 
         # 非表示ボタン
