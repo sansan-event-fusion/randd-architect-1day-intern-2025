@@ -13,7 +13,7 @@ def fetch_all_cards():
     offset = 0
     limit = 100
 
-    while True:
+    while True:  # テスト
         response = requests.get(f"{BASE_URL}/cards/", params={"offset": offset, "limit": limit})
         data = response.json()
         if not data:
