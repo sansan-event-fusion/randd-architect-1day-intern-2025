@@ -55,16 +55,9 @@ def show_card_data(user_data):
 
 #100件分、期間で全ての情報を取得する件数
 def get_contacts_data():
-    url = 'https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/'
-    params = {
-        "offset": 0,
-        "limit": 10000,
-        "start_date": "2023-01-01",
-        "end_date": "2024-01-01"
-    }
-    headers = {
-        "accept": "application/json"
-    }
+    url = "https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/"
+    params = {"offset": 0, "limit": 10000, "start_date": "2023-01-01", "end_date": "2024-01-01"}
+    headers = {"accept": "application/json"}
     response = requests.get(url, headers=headers, params=params, timeout=10)
     return response.json()
 
