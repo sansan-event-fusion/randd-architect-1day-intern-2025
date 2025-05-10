@@ -6,11 +6,8 @@ from pathlib import Path
 import pydeck as pdk
 import requests
 import streamlit as st
-from dotenv import load_dotenv
 from geopy.extra.rate_limiter import RateLimiter
 from geopy.geocoders import Nominatim
-
-load_dotenv(Path(__file__).parent.parent / ".env")
 
 _geolocator = Nominatim(user_agent="sample_app", timeout=10)
 _geocode = RateLimiter(
