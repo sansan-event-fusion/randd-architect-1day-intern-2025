@@ -14,7 +14,9 @@ def fetch_all_cards():
     limit = 100
 
     while True:  # テスト
-        response = requests.get(f"{BASE_URL}/cards/", params={"offset": offset, "limit": limit})
+        response = requests.get(
+            f"{BASE_URL}/cards/", params={"offset": offset, "limit": limit}, timeout=30  # タイムアウトを30秒に設定
+        )
         data = response.json()
         if not data:
             break
@@ -33,7 +35,9 @@ def fetch_all_contacts():
     limit = 100
 
     while True:
-        response = requests.get(f"{BASE_URL}/contacts/", params={"offset": offset, "limit": limit})
+        response = requests.get(
+            f"{BASE_URL}/contacts/", params={"offset": offset, "limit": limit}, timeout=30  # タイムアウトを30秒に設定
+        )
         data = response.json()
         if not data:
             break
