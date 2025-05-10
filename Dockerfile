@@ -64,4 +64,4 @@ COPY app/ app/
 COPY .streamlit/ .streamlit/
 USER 1000
 EXPOSE 8080
-CMD ["poetry", "run", "streamlit", "run", "app/data_visualization.py", "--server.port=8080", "--server.address=0.0.0.0"]
+CMD ["streamlit", "run", "app/data_visualization.py", "--server.port=8080", "--server.address=0.0.0.0"]
