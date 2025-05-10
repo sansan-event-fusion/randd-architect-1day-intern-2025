@@ -4,7 +4,7 @@ import pandas as pd
 import streamlit as st
 
 # タイトル
-st.title("サンプルアプリ")
+st.title("名刺アプリ")
 
 path = Path(__file__).parent / "dummy_data.csv"
 df_dummy = pd.read_csv(path, dtype=str)
