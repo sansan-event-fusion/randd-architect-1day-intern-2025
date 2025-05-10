@@ -1,5 +1,5 @@
 import time
-from typing import Any, Optional
+from typing import Any
 
 import pandas as pd
 import plotly.express as px
@@ -159,7 +159,7 @@ def fetch_all_cards():
 
 def _handle_contact_api_error(
     e: Exception, offset: int, contacts: list, retries: int, max_retries: int, retry_delay: int
-) -> Optional[pd.DataFrame]:
+) -> pd.DataFrame | None:
     """Handle API errors when fetching contacts."""
     if retries == max_retries:
         st.warning(f"コンタクト履歴の取得中にエラーが発生しました（offset={offset}）: {e!s}")
@@ -172,7 +172,7 @@ def _handle_contact_api_error(
     return None
 
 
-def _fetch_contacts_page(offset: int, limit: int) -> Optional[list]:
+def _fetch_contacts_page(offset: int, limit: int) -> list | None:
     """Fetch a single page of contacts."""
     try:
         response = requests.get(
@@ -318,7 +318,7 @@ def _create_time_series_plot(contacts_df: pd.DataFrame) -> tuple[Any, pd.Series]
     return fig, daily_contacts
 
 
-def _create_contact_type_plot(contacts_df: pd.DataFrame) -> Optional[Any]:
+def _create_contact_type_plot(contacts_df: pd.DataFrame) -> Any | None:
     """Create contact type distribution plot."""
     if "type" not in contacts_df.columns:
         return None
