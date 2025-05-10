@@ -169,7 +169,7 @@ elif page == "営業活動履歴表示":
                         pref_summary = (
                             filtered_df["都道府県"]
                             .value_counts()
-                            .reset_index(name="件数 ")
+                            .reset_index(name="件数")
                             .rename(columns={"index": "都道府県"})
                         )
 
@@ -259,6 +259,19 @@ elif page == "営業活動履歴表示":
                             )
                             cards_subset = cards_data[cards_data["user_id"].isin(target_user_ids)]
                             st.dataframe(cards_subset[["user_id", "full_name", "company_name", "address"]])
+
+                            # ▼▼▼ 新しいセクション: 選択都道府県の全企業のcards一覧 ▼▼▼
+                            st.subheader(f"{selected_prefecture}: 所属企業のcards一覧")
+
+                            # 対象の都道府県に属する全企業の user_id を抽出
+                            target_user_ids_all = (
+                                filtered_df[filtered_df["都道府県"] == selected_prefecture]["user_id"].unique().tolist()
+                            )
+
+                            # 全 cards データから該当する user_id をもつ行を抽出
+                            cards_pref_subset = cards_data[cards_data["user_id"].isin(target_user_ids_all)]
+
+                            st.dataframe(cards_pref_subset[["user_id", "full_name", "company_name", "address"]])
 
                 else:
                     st.error(f"交換データ取得エラー: {contact_res.status_code}")
