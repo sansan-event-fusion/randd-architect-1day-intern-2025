@@ -10,13 +10,8 @@ st.title("新規事業開時に助けになりそうな人")
 
 def get_data():
     url = "https://circuit-trial.stg.rd.ds.sansan.com/api/cards/"
-    params = {
-        "offset": 0,
-        "limit": 100
-    }
-    headers = {
-    "accept": "application/json"
-    }
+    params = {"offset": 0, "limit": 100}
+    headers = {"accept": "application/json"}
 
     response = requests.get(url, headers=headers, params=params, timeout=10)
     return response.json()
