@@ -7,9 +7,9 @@ import streamlit as st
 # ユーザを一人選ぶ
 def get_random_user():
     # 名刺の総数を取得
-    url_count_buisiness_card = "https://circuit-trial.stg.rd.ds.sansan.com/api/cards/count"
-    response_count_buisiness_card = requests.get(url_count_buisiness_card, timeout=10)
-    count_buisiness_card = int(response_count_buisiness_card.content)
+    url_count_business_card = "https://circuit-trial.stg.rd.ds.sansan.com/api/cards/count"
+    response_count_business_card = requests.get(url_count_business_card, timeout=10)
+    count_business_card = int(response_count_business_card.content)
 
     # ユーザをランダムに選ぶ
     user_index = random.randint(0, count_buisiness_card - 1)
