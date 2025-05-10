@@ -71,6 +71,13 @@ def main():
     with col2:
         st.metric("総コンタクト数", len(contacts_df))
 
+    # 生データの表示
+    st.header("名刺データ（最初の20行）")
+    st.dataframe(cards_df.head(20))
+
+    st.header("コンタクト履歴（最初の20行）")
+    st.dataframe(contacts_df.head(20))
+
     # 会社ごとの名刺数の分布
     st.header("会社ごとの名刺数の分布")
     company_counts = cards_df["company_name"].value_counts().head(10)
