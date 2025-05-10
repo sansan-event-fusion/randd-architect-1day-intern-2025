@@ -54,11 +54,7 @@ else:
             df["exchange_date"] = pd.to_datetime(df["created_at"]).dt.date
 
             # 日別に集計
-            count_by_date = (
-                df.groupby("exchange_date")
-                .size()
-                .reset_index(name="count")
-            )
+            count_by_date = (df.groupby("exchange_date").size().reset_index(name="count"))
 
             # Altair で棒グラフを作成
             chart = (
