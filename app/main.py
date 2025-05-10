@@ -1,8 +1,6 @@
 from pathlib import Path
-
 import pandas as pd
 import streamlit as st
-
 import requests
 
 # タイトル
@@ -10,12 +8,14 @@ st.title("名刺データ")
 
 url = "https://circuit-trial.stg.rd.ds.sansan.com/api/"
 
-response = requests.get(url + "cards/?offset=0&limit=100", json=data)
+# GETリクエスト（dataは不要）
+response = requests.get(url + "cards/?offset=0&limit=100")
 
-df = response.json()
+# JSONレスポンスを辞書として取得
+res_json = response.json()
 
-# path = Path(__file__).parent / "dummy_data.csv"
+# DataFrameに変換（空なら空のテーブル）
+df = pd.DataFrame(res_json)
 
-# df_dummy = pd.read_csv(path, dtype=str)
-
+# 表示
 st.dataframe(df)
