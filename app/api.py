@@ -7,12 +7,12 @@ class BaseRequest:
     def __init__(self, api_root: str):
         self.str_api_root = URL(api_root)
 
-    def _requesting(self, ad_str: str, params=None) -> requests.Response | None:
+    def _requesting(self, ad_str: str, params=None) -> requests.Response:
         try:
             url = self.str_api_root / ad_str
             response = requests.get(f"{url}", params=params, timeout=10)
         except requests.Timeout:
-            return None
+            return requests.Response()
         return response
 
 
