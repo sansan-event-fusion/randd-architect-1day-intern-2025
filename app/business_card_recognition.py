@@ -1,6 +1,5 @@
 import io
 import re
-from typing import Dict, List, Optional
 
 import cv2
 import easyocr
@@ -34,7 +33,7 @@ def load_ocr_reader():
     return easyocr.Reader(["ja", "en"])
 
 
-def extract_name(text_blocks: List[tuple], used_blocks: set) -> Optional[str]:
+def extract_name(text_blocks: list[tuple], used_blocks: set) -> str | None:
     """Extract name using improved heuristics."""
     # Common titles and positions to exclude
     titles = {
@@ -69,7 +68,7 @@ def extract_name(text_blocks: List[tuple], used_blocks: set) -> Optional[str]:
     return None
 
 
-def extract_company(text_blocks: List[tuple], used_blocks: set) -> Optional[str]:
+def extract_company(text_blocks: list[tuple], used_blocks: set) -> str | None:
     """Extract company name using improved patterns."""
     company_patterns = [
         r"株式会社[\s]*.+",
@@ -102,12 +101,12 @@ def _has_address_markers(text: str, postal_code_pattern: str, address_markers: s
 
 
 def _collect_address_parts(
-    text_blocks: List[tuple],
+    text_blocks: list[tuple],
     current_index: int,
     used_blocks: set,
     postal_code_pattern: str,
     address_markers: set,
-) -> List[str]:
+) -> list[str]:
     """Collect address parts from adjacent blocks."""
     address_parts = []
 
@@ -133,7 +132,7 @@ def _collect_address_parts(
     return address_parts
 
 
-def extract_address(text_blocks: List[tuple], used_blocks: set) -> Optional[str]:
+def extract_address(text_blocks: list[tuple], used_blocks: set) -> str | None:
     """Extract address from text blocks."""
     address_markers = {"県", "市", "区", "町", "村", "郡", "丁目", "番地", "号"}
     postal_code_pattern = r"〒?\d{3}[-−]?\d{4}"
@@ -192,9 +191,7 @@ def _extract_contact_detail(
     return None
 
 
-def extract_contact_info(
-    text_blocks: List[tuple], used_blocks: set
-) -> tuple[Optional[str], Optional[str], Optional[str]]:
+def extract_contact_info(text_blocks: list[tuple], used_blocks: set) -> tuple[str | None, str | None, str | None]:
     """Extract email, phone number, and fax from text blocks."""
     patterns = {
         "email": r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}",
@@ -272,7 +269,7 @@ def extract_department_and_title(text_blocks: list[tuple], used_blocks: set) -> 
     return department, title
 
 
-def extract_info_from_text(text_blocks: List[tuple]) -> Dict[str, str]:
+def extract_info_from_text(text_blocks: list[tuple]) -> dict[str, str]:
     """Extract relevant information from OCR text blocks using improved extraction logic."""
     used_blocks: set[int] = set()  # Track which blocks have been used
 
@@ -295,7 +292,7 @@ def extract_info_from_text(text_blocks: List[tuple]) -> Dict[str, str]:
     }
 
 
-def process_business_card(file_bytes: bytes, file_type: str) -> Dict[str, str]:
+def process_business_card(file_bytes: bytes, file_type: str) -> dict[str, str]:
     """Process business card image and extract information with improved preprocessing."""
     try:
         if file_type == "pdf":
@@ -324,7 +321,7 @@ def process_business_card(file_bytes: bytes, file_type: str) -> Dict[str, str]:
         return extracted_info
 
     except Exception as e:
-        st.error(f"Error processing business card: {str(e)}")
+        st.error(f"Error processing business card: {e!s}")
         return {
             "name": "",
             "company": "",
