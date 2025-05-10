@@ -12,7 +12,7 @@ class BusinessCard:
     company_name: str
     address: str
     phone_number: str
-    similarity: float|None
+    similarity: float|None = None
 
 
 @dataclass
