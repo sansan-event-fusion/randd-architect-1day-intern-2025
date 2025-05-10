@@ -144,4 +144,4 @@ for name in st.session_state.graph_names:
     st.subheader(f"グラフ: {name}")
     display_graph(name)
 
-display_graph("")
+# display_graph("")
