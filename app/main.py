@@ -248,7 +248,7 @@ elif page == "営業活動履歴表示":
                         selected_prefecture = st.selectbox(
                             "表示対象の都道府県を選択してください(地図クリックまたは選択)",
                             prefecture_options,
-                            index=initial_index
+                            index=initial_index,
                         )
 
                         if selected_prefecture:
@@ -259,7 +259,6 @@ elif page == "営業活動履歴表示":
                             )
                             cards_subset = cards_data[cards_data["user_id"].isin(target_user_ids)]
                             st.dataframe(cards_subset[["user_id", "full_name", "company_name", "address"]])
-
 
                 else:
                     st.error(f"交換データ取得エラー: {contact_res.status_code}")
