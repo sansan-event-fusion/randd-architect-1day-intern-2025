@@ -1,7 +1,5 @@
-import json
 import os
 import random
-import time
 from pathlib import Path
 import re
 
@@ -49,6 +47,15 @@ if not contacts:
 contact = random.choice(contacts)
 owner_company_id = contact.get("owner_company_id")
 # st.write(f"選択されたowner_company_id: {owner_company_id}")
+
+# # 選択した会社の情報を表示
+# st.subheader("選択された会社情報")
+# st.write({
+#     "owner_company_id": owner_company_id,
+#     "company_name": contact.get("company_name"),
+#     "department_name": contact.get("department_name"),
+#     "address": contact.get("address"),
+# })
 
 # 2. owner_company_idでcontacts_owner_company_api_urlを利用して名刺を取得
 contacts_owner_company_url = CONTACTS_OWNER_COMPANY_API_URL.format(owner_company_id=owner_company_id)
@@ -136,3 +143,4 @@ if addresses:
     ))
 else:
     st.write("ヒートマップ表示用の住所データがありません")
+
