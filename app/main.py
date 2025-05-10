@@ -1,5 +1,4 @@
 from datetime import date, timedelta
-from typing import Union
 
 import altair as alt
 import pandas as pd
@@ -34,7 +33,7 @@ if start_date > end_date:
     st.error("開始日は終了日より前にしてください。")
 else:
     base_url = "https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/"
-    params: dict[str, Union[str, int]] = {
+    params: dict[str, str | int] = {
         "offset": 0,
         "limit": 1000,
         "start_date": start_date.isoformat(),
