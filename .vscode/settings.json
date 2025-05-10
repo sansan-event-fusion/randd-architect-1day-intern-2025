@@ -1,0 +1,23 @@
+{
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "python.analysis.autoImportCompletions": false,
+    "python.analysis.diagnosticMode": "workspace",
+    "python.analysis.typeCheckingMode": "off",
+    // mypy
+    "mypy-type-checker.importStrategy": "fromEnvironment",
+    // test
+    "python.testing.pytestEnabled": true,
+    // ruff
+    "ruff.lint.enable": true,
+    "ruff.importStrategy": "fromEnvironment",
+    // ruff formatter
+    "[python]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+    },
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    }
+    }

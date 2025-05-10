@@ -1,8 +1,5 @@
 from datetime import datetime
-from pathlib import Path
-from typing import List
 
-import matplotlib.pyplot as plt
 import networkx as nx
 import streamlit as st
 import streamlit.components.v1 as components
@@ -15,8 +12,8 @@ st.title("名刺リレーション表示アプリ")
 
 api = BusinessCardAPI("https://circuit-trial.stg.rd.ds.sansan.com/api")
 
-cards:list[BusinessCard] = api.get_all_cards()
-contacts:list[ExchangeHistory] = api.get_all_contacts()
+cards: list[BusinessCard] = api.get_all_cards()
+contacts: list[ExchangeHistory] = api.get_all_contacts()
 di = {}
 single_file_cards = []
 
@@ -26,9 +23,7 @@ for i, card in enumerate(cards):
     single_file_cards.append(card)
 
 
-
-
-def card_display(card:BusinessCard):
+def card_display(card: BusinessCard):
     return f"""user_id:{card.user_id}
 名前：{card.full_name}
 会社名：{card.company_name}
@@ -38,7 +33,8 @@ def card_display(card:BusinessCard):
 類似度：{card.similarity}
 """
 
-def history(u:int, v:int, date:datetime):
+
+def history(u: int, v: int, date: datetime):
     # 文字列をdatetimeオブジェクトに変換
     dt = datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ")
 
@@ -53,7 +49,6 @@ FROM
 TO
 {card_display(single_file_cards[u])}
 """
-
 
 
 def display_graph(name: str, nodes=None):
@@ -74,12 +69,11 @@ def display_graph(name: str, nodes=None):
             nodes = set()
 
         for i, card in enumerate(cards):
-            
-            if(name == "" or card.user_id in se_top):
+            if name == "" or card.user_id in se_top:
                 G.add_node(i, title=card_display(card), color="red")
                 nodes.add(i)
             # print(name, card.user_id)
-            if(card.user_id == name):
+            if card.user_id == name:
                 # print("jsjsjsjs")s
                 G.add_node(i, title=card_display(card), color="yellow")
                 nodes.add(i)
@@ -90,7 +84,6 @@ def display_graph(name: str, nodes=None):
         #     if(u in se_top or v in se_top):
         #         nodes.add(u)
         #         nodes.add(v)
-
 
         for contact in contacts:
             u = di.get(contact.owner_user_id)
@@ -108,7 +101,7 @@ def display_graph(name: str, nodes=None):
         net.show_buttons(filter_=["physics"])
         net.save_graph(f"{name}.html")
 
-        with open(f"{name}.html", "r", encoding="utf-8") as f:
+        with open(f"{name}.html", encoding="utf-8") as f:
             html_content = f.read()
 
         # st.title(f"{name} を表示中")
@@ -118,10 +111,10 @@ def display_graph(name: str, nodes=None):
             st.session_state[key_toggle] = False
             st.rerun()
         components.html(html_content, height=600, scrolling=True)
-    else:
-        if st.button(f"{name}グラフを再表示する", key=f"show_btn_{name}"):
-            st.session_state[key_toggle] = True
-            st.rerun()
+    elif st.button(f"{name}グラフを再表示する", key=f"show_btn_{name}"):
+        st.session_state[key_toggle] = True
+        st.rerun()
+
 
 # display_graph("asdf", 10, cards, contacts, di, card_display, history)
 
