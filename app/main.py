@@ -68,7 +68,7 @@ for i in range(len(top10_json)):
 min_score = min(similarlity_scores)
 max_score = max(similarlity_scores)
 normalized_scores = [(score - min_score) / (max_score - min_score) for score in similarlity_scores]
-normalized_scores = np.exp(normalized_scores)  # Apply exponential scaling
+normalized_scores = np.exp(np.array(normalized_scores))  # Apply exponential scaling
 
 
 similar_user_df = pd.DataFrame(
