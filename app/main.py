@@ -1,22 +1,23 @@
 import os
 import random
 import re
+from pathlib import Path
+
+import pydeck as pdk
 import requests
 import streamlit as st
-import pydeck as pdk
-from pathlib import Path
 from dotenv import load_dotenv
-from geopy.geocoders import Nominatim
 from geopy.extra.rate_limiter import RateLimiter
+from geopy.geocoders import Nominatim
 
 load_dotenv(Path(__file__).parent.parent / ".env")
 
 _geolocator = Nominatim(user_agent="sample_app", timeout=10)
 _geocode = RateLimiter(
     _geolocator.geocode,
-    min_delay_seconds=1.1,     # Nominatim ポリシー準拠
-    max_retries=3,             # タイムアウト時に自動リトライ
-    error_wait_seconds=2.0     # 失敗時の待機
+    min_delay_seconds=1.1, # Nominatim ポリシー準拠
+    max_retries=3, # タイムアウト時に自動リトライ
+    error_wait_seconds=2.0 # 失敗時の待機
 )
 
 CARDS_USER_API_URL = os.getenv("CARDS_USER_API_URL", default="https://circuit-trial.stg.rd.ds.sansan.com/api/cards/{user_id}")
@@ -70,13 +71,13 @@ def geocode_address(address: str) -> tuple[float | None, float | None]:
         location = _geocode(normalized)
         if location is not None:
             return float(location.latitude), float(location.longitude)
-    except Exception as e:          # geopy の GeocoderTimedOut など
+    except Exception as e: # geopy の GeocoderTimedOut など
         st.write(f"[Geocoding] エラー: {e}")
     return None, None
 
 addresses = []
-user_id_list = list(user_ids)          # set → list に変換
-sample_user_ids = user_id_list[:30]     # 先頭30件をサンプルとして取得
+user_id_list = list(user_ids) # set → list に変換
+sample_user_ids = user_id_list[:30] # 先頭30件をサンプルとして取得
 for user_id in sample_user_ids:
     if not user_id:
         continue
@@ -92,7 +93,7 @@ for user_id in sample_user_ids:
 
     if not addr_str:
         continue
-    # # 住所が空でない場合、geocode_addressを呼び出す
+    # 住所が空でない場合、geocode_addressを呼び出す
     if addr_str:
         lat, lon = geocode_address(addr_str)
         if lat and lon:
