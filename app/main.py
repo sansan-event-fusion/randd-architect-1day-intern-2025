@@ -8,8 +8,9 @@ from api import BusinessCardAPI
 from datatype import BusinessCard, ExchangeHistory
 from pyvis.network import Network
 
+VERSION = "v0.0.3"
 # タイトル
-st.title("名刺リレーション表示アプリv0.0.2")
+st.title(f"名刺リレーション表示アプリ {VERSION}")
 
 api = BusinessCardAPI("https://circuit-trial.stg.rd.ds.sansan.com/api")
 
@@ -91,10 +92,11 @@ def display_graph(name: str, nodes=None):  # noqa: C901 これはロジックを
         net.barnes_hut(gravity=-1, central_gravity=0, spring_length=200)
         net.from_nx(gg)
         net.show_buttons(filter_=["physics"])
-        net.save_graph(f"{name}.html")
+        way = f"/tmp/{name}.html"  # noqa: S108
+        net.save_graph(way)
 
         # with Path.open(f"{name}.html", encoding="utf-8") as f:
-        with Path(f"{name}.html").open(encoding="utf-8") as f:
+        with Path(way).open(encoding="utf-8") as f:
             html_content = f.read()
 
         # 非表示ボタン
