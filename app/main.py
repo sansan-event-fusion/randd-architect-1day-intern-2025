@@ -65,7 +65,7 @@ def display_graph(name: str, nodes=None):  # noqa: C901 これはロジックを
 
     if st.session_state[key_toggle]:
         # グラフ作成
-        gg = nx.Diggraph()
+        gg = nx.DiGraph()
         if nodes is None:
             nodes = set()
 
