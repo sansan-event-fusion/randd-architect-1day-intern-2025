@@ -341,7 +341,7 @@ def _display_company_selection(cards_df: pd.DataFrame) -> list[str] | None:
     if select_all:
         return None
 
-    selected_companies = st.sidebar.multiselect(
+    selected_companies: list[str] = st.sidebar.multiselect(
         "表示する会社を選択してください",
         options=top_companies,
         default=top_companies[:5] if len(top_companies) > 5 else top_companies,
