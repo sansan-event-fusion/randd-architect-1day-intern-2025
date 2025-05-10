@@ -121,9 +121,7 @@ for i in range(11):
 
 
 
-#output = show_user_data(top1['user_id'])
-#output[0]['full_name']
-#output[0]['position']
+# st.text("ユーザー名: " + output[0]['full_name'])
 
 #print(output[0]['full_name'])
 #print(output[0]['position'])
