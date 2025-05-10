@@ -1,4 +1,5 @@
 from datetime import datetime
+from pathlib import Path
 
 import networkx as nx
 import streamlit as st
@@ -25,18 +26,18 @@ for i, card in enumerate(cards):
 
 def card_display(card: BusinessCard):
     return f"""user_id:{card.user_id}
-名前：{card.full_name}
-会社名：{card.company_name}
-役職：{card.position}
-住所：{card.address}
-電話番号：{card.phone_number}
-類似度：{card.similarity}
+名前: {card.full_name}
+会社名: {card.company_name}
+役職: {card.position}
+住所: {card.address}
+電話番号: {card.phone_number}
+類似度: {card.similarity}
 """
 
 
 def history(u: int, v: int, date: datetime):
     # 文字列をdatetimeオブジェクトに変換
-    dt = datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ")
+    dt = datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ")  # noqa: DTZ007
 
     # "年月日 時間分"形式でフォーマット
     formatted_date = dt.strftime("%Y年%m月%d日 %H時%M分")
@@ -51,20 +52,20 @@ TO
 """
 
 
-def display_graph(name: str, nodes=None):
+def display_graph(name: str, nodes=None):  # noqa: C901
     key_toggle = f"show_graph_{name}"
 
     if name != "":
         top_cards = api.get_similar_users(name)
 
-        se_top = set([card.user_id for card in top_cards])
+        se_top = {card.user_id for card in top_cards}
 
     if key_toggle not in st.session_state:
         st.session_state[key_toggle] = True  # 初期表示状態
 
     if st.session_state[key_toggle]:
         # グラフ作成
-        G = nx.DiGraph()
+        G = nx.DiGraph()  # noqa: N806
         if nodes is None:
             nodes = set()
 
@@ -72,18 +73,9 @@ def display_graph(name: str, nodes=None):
             if name == "" or card.user_id in se_top:
                 G.add_node(i, title=card_display(card), color="red")
                 nodes.add(i)
-            # print(name, card.user_id)
             if card.user_id == name:
-                # print("jsjsjsjs")s
                 G.add_node(i, title=card_display(card), color="yellow")
                 nodes.add(i)
-
-        # for contact in contacts:
-        #     u = di.get(contact.owner_user_id)
-        #     v = di.get(contact.user_id)
-        #     if(u in se_top or v in se_top):
-        #         nodes.add(u)
-        #         nodes.add(v)
 
         for contact in contacts:
             u = di.get(contact.owner_user_id)
@@ -101,10 +93,8 @@ def display_graph(name: str, nodes=None):
         net.show_buttons(filter_=["physics"])
         net.save_graph(f"{name}.html")
 
-        with open(f"{name}.html", encoding="utf-8") as f:
+        with Path.open(f"{name}.html", encoding="utf-8") as f:
             html_content = f.read()
-
-        # st.title(f"{name} を表示中")
 
         # 非表示ボタン
         if st.button(f"{name}グラフを非表示にする", key=f"hide_btn_{name}"):
@@ -116,10 +106,6 @@ def display_graph(name: str, nodes=None):
         st.rerun()
 
 
-# display_graph("asdf", 10, cards, contacts, di, card_display, history)
-
-
-# 初期化：表示するグラフ名のリスト
 if "graph_names" not in st.session_state:
     st.session_state.graph_names = []
 
@@ -136,5 +122,3 @@ for name in st.session_state.graph_names:
     st.markdown("---")
     st.subheader(f"グラフ: {name}")
     display_graph(name)
-
-# display_graph("")
