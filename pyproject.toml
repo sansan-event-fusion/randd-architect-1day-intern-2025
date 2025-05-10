@@ -11,6 +11,11 @@ python = ">=3.10,<3.14"
 streamlit = "^1.43.2"
 streamlit-agraph = "^0.0.45"
 requests = "^2.32.3"
+pytesseract = "^0.3.10"
+pdf2image = "^1.17.0"
+pillow = "^10.2.0"
+numpy = "^1.26.0"
+opencv-python = "^4.9.0"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.11.2"
