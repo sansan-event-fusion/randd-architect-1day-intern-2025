@@ -1,10 +1,9 @@
+from datetime import datetime
 from pathlib import Path
 from typing import List
 
 import matplotlib.pyplot as plt
 import networkx as nx
-import pandas as pd
-import requests
 import streamlit as st
 import streamlit.components.v1 as components
 from api import BusinessCardAPI
@@ -12,76 +11,137 @@ from datatype import BusinessCard, ExchangeHistory
 from pyvis.network import Network
 
 # タイトル
-st.title("mattsunkunアプリ")
+st.title("名刺リレーション表示アプリ")
 
 api = BusinessCardAPI("https://circuit-trial.stg.rd.ds.sansan.com/api")
 
-# print("asdf")
-# st.title("カードAPIにアクセスする")
-# cards = api.get_similar_users("9230809757")
-# for card in cards:
-#     st.write(f"名前: {card.full_name}")
-#     st.write(f"会社名: {card.company_name}")
-#     st.write(f"役職: {card.position}")
-#     st.write(f"住所: {card.address}")
-#     st.write(f"電話番号: {card.phone_number}")
-#     st.markdown("---")
-
-
-
-
-# # グラフを作成
-# G = nx.erdos_renyi_graph(10, 0.3)  # 10ノード、各辺が存在する確率0.3のエルデシュ・レーニーグラフ
-
-# # グラフの描画
-# plt.figure(figsize=(8, 6))
-# nx.draw(G, with_labels=True, node_size=500, node_color='skyblue', font_size=12, font_weight='bold')
-# plt.title("Random Graph")
-
-# # Streamlitにグラフを表示
-# st.title('グラフ理論の表示例')
-# st.pyplot(plt)
-
-
-# グラフ作成
-G = nx.DiGraph()
+cards:list[BusinessCard] = api.get_all_cards()
+contacts:list[ExchangeHistory] = api.get_all_contacts()
 di = {}
+single_file_cards = []
 
-for i, card in enumerate(api.get_all_cards()):
-    G.add_node(i, title=f"{card.address}")
+
+for i, card in enumerate(cards):
     di[card.user_id] = i
-
-for i, contact in enumerate(api.get_all_contacts()):
-    try:
-        u = di[contact.owner_user_id]
-        v = di[contact.user_id]
-
-        G.add_edge(u, v, title=f"{contact.created_at}")
-    except:
-        pass
+    single_file_cards.append(card)
 
 
 
-# G.add_node(1, title="ノード1の詳細情報")
-# G.add_node(2, title="ノード2の詳細情報")
-# G.add_node(3, title="ノード3の詳細情報")
-# G.add_edge(1, 2, title="aaaa")
-# G.add_edge(2, 3)
-# G.add_edge(3, 1)
 
-# Pyvisで描画
-net = Network(height="600px", width="100%", bgcolor="#222222", font_color="white")
-net.barnes_hut(gravity=-1, central_gravity=0, spring_length=200)  # 必要ならチューニング
+def card_display(card:BusinessCard):
+    return f"""user_id:{card.user_id}
+名前：{card.full_name}
+会社名：{card.company_name}
+役職：{card.position}
+住所：{card.address}
+電話番号：{card.phone_number}
+類似度：{card.similarity}
+"""
 
-net.from_nx(G)
-net.show_buttons(filter_=['physics'])  # 物理設定UIも表示される（必要に応じて）
+def history(u:int, v:int, date:datetime):
+    # 文字列をdatetimeオブジェクトに変換
+    dt = datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ")
 
-# HTMLファイルとして保存
-net.save_graph("graph.html")
+    # "年月日 時間分"形式でフォーマット
+    formatted_date = dt.strftime("%Y年%m月%d日 %H時%M分")
+    return f"""WHEN
+{formatted_date}
 
-# Streamlitに埋め込む
-with open("graph.html", "r", encoding="utf-8") as f:
-    html_content = f.read()
+FROM
+{card_display(single_file_cards[v])}
 
-st.title("インタラクティブなグラフ表示")
-components.html(html_content, height=600, scrolling=True)
+TO
+{card_display(single_file_cards[u])}
+"""
+
+
+
+def display_graph(name: str, nodes=None):
+    key_toggle = f"show_graph_{name}"
+
+    if name != "":
+        top_cards = api.get_similar_users(name)
+
+        se_top = set([card.user_id for card in top_cards])
+
+    if key_toggle not in st.session_state:
+        st.session_state[key_toggle] = True  # 初期表示状態
+
+    if st.session_state[key_toggle]:
+        # グラフ作成
+        G = nx.DiGraph()
+        if nodes is None:
+            nodes = set()
+
+        for i, card in enumerate(cards):
+            
+            if(name == "" or card.user_id in se_top):
+                G.add_node(i, title=card_display(card), color="red")
+                nodes.add(i)
+            # print(name, card.user_id)
+            if(card.user_id == name):
+                # print("jsjsjsjs")s
+                G.add_node(i, title=card_display(card), color="yellow")
+                nodes.add(i)
+
+        # for contact in contacts:
+        #     u = di.get(contact.owner_user_id)
+        #     v = di.get(contact.user_id)
+        #     if(u in se_top or v in se_top):
+        #         nodes.add(u)
+        #         nodes.add(v)
+
+
+        for contact in contacts:
+            u = di.get(contact.owner_user_id)
+            v = di.get(contact.user_id)
+            if u in nodes or v in nodes:
+                G.add_node(u, title=card_display(card))
+                G.add_node(v, title=card_display(card))
+
+                G.add_edge(u, v, title=history(u, v, contact.created_at))
+
+        # Pyvisで描画
+        net = Network(height="600px", width="100%", bgcolor="#222222", font_color="white")
+        net.barnes_hut(gravity=-1, central_gravity=0, spring_length=200)
+        net.from_nx(G)
+        net.show_buttons(filter_=["physics"])
+        net.save_graph(f"{name}.html")
+
+        with open(f"{name}.html", "r", encoding="utf-8") as f:
+            html_content = f.read()
+
+        # st.title(f"{name} を表示中")
+
+        # 非表示ボタン
+        if st.button(f"{name}グラフを非表示にする", key=f"hide_btn_{name}"):
+            st.session_state[key_toggle] = False
+            st.rerun()
+        components.html(html_content, height=600, scrolling=True)
+    else:
+        if st.button(f"{name}グラフを再表示する", key=f"show_btn_{name}"):
+            st.session_state[key_toggle] = True
+            st.rerun()
+
+# display_graph("asdf", 10, cards, contacts, di, card_display, history)
+
+
+# 初期化：表示するグラフ名のリスト
+if "graph_names" not in st.session_state:
+    st.session_state.graph_names = []
+
+# 新しい name 入力
+new_name = st.text_input("新しいグラフ名を入力", key="name_input")
+if st.button("追加", key="add_btn"):
+    if new_name.strip():
+        st.session_state.graph_names.append(new_name.strip())
+    else:
+        st.warning("グラフ名を入力してください。")
+
+# 既存のグラフを表示
+for name in st.session_state.graph_names:
+    st.markdown("---")
+    st.subheader(f"グラフ: {name}")
+    display_graph(name)
+
+display_graph("")
