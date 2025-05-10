@@ -153,28 +153,41 @@ def extract_address(text_blocks: List[tuple], used_blocks: set) -> Optional[str]
     return None
 
 
+def _check_text_validity(text: str, used_blocks: set, block_index: int) -> bool:
+    """Check if text block is valid for processing."""
+    return bool(text.strip() and block_index not in used_blocks)
+
+
+def _match_identifier(text: str, identifier: str | None) -> bool:
+    """Check if text matches the identifier."""
+    return not identifier or identifier in text.upper()
+
+
+def _extract_pattern_match(text: str, pattern: str) -> str | None:
+    """Extract pattern match from text."""
+    match = re.search(pattern, text)
+    return match.group(1) if match and match.groups() else match.group(0) if match else None
+
+
 def _extract_contact_detail(
-    text_blocks: List[tuple],
+    text_blocks: list[tuple],
     used_blocks: set,
     pattern: str,
     identifier: str | None = None,
-) -> Optional[str]:
+) -> str | None:
     """Extract a specific contact detail (email, phone, or fax) from text blocks."""
     for i, (_, text, _) in enumerate(text_blocks):
-        if i in used_blocks:
+        if not _check_text_validity(text, used_blocks, i):
             continue
 
         text = text.strip()
-        if not text:
+        if not _match_identifier(text, identifier):
             continue
 
-        if identifier and identifier not in text.upper():
-            continue
-
-        match = re.search(pattern, text)
-        if match:
+        result = _extract_pattern_match(text, pattern)
+        if result:
             used_blocks.add(i)
-            return match.group(1) if identifier else match.group(0)
+            return result
 
     return None
 
@@ -196,17 +209,28 @@ def extract_contact_info(
     return email, phone, fax
 
 
-def _is_department_text(text: str, department_markers: set) -> bool:
+def _check_department_markers(text: str, markers: set[str]) -> bool:
     """Check if text contains department markers."""
-    return any(marker in text for marker in department_markers)
+    return any(marker in text for marker in markers)
 
 
-def _is_title_text(text: str, title_markers: set) -> bool:
-    """Check if text contains title markers."""
-    return any(marker in text for marker in title_markers)
+def _process_department(text: str, block_index: int, used_blocks: set, department_markers: set[str]) -> str | None:
+    """Process text block for department information."""
+    if _check_department_markers(text, department_markers):
+        used_blocks.add(block_index)
+        return text
+    return None
 
 
-def extract_department_and_title(text_blocks: List[tuple], used_blocks: set) -> tuple[Optional[str], Optional[str]]:
+def _process_title(text: str, block_index: int, used_blocks: set, title_markers: set[str]) -> str | None:
+    """Process text block for title information."""
+    if _check_department_markers(text, title_markers):
+        used_blocks.add(block_index)
+        return text
+    return None
+
+
+def extract_department_and_title(text_blocks: list[tuple], used_blocks: set) -> tuple[str | None, str | None]:
     """Extract department and title from text blocks."""
     department_markers = {"部", "課", "グループ", "チーム", "本部", "事業部", "支社", "支店", "営業所"}
     title_markers = {
@@ -227,23 +251,20 @@ def extract_department_and_title(text_blocks: List[tuple], used_blocks: set) -> 
     title = None
 
     for i, (_, text, _) in enumerate(text_blocks):
-        if i in used_blocks:
+        if not _check_text_validity(text, used_blocks, i):
             continue
 
         text = text.strip()
-        if not text:
-            continue
 
         # Extract department
-        if not department and _is_department_text(text, department_markers):
-            department = text
-            used_blocks.add(i)
-            continue
+        if not department:
+            department = _process_department(text, i, used_blocks, department_markers)
+            if department:
+                continue
 
         # Extract title
-        if not title and _is_title_text(text, title_markers):
-            title = text
-            used_blocks.add(i)
+        if not title:
+            title = _process_title(text, i, used_blocks, title_markers)
 
         if department and title:
             break
