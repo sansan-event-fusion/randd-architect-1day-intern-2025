@@ -46,9 +46,39 @@ def get_surrounding_users(owner_id, entire_limit=200, selection_limit=10):
     return selected_surrounding_user_ids
 
 
+def get_approachable_users(surrounding_user_ids, entire_limit=200, dict_limit=1000, selection_limit=20):
+    # アプローチ可能なユーザ辞書を用意
+    approachable_user_dict: dict[str, int] = {}
+    # 各ユーザに対してアプローチ可能なユーザを取得
+    for surrounding_user_id in surrounding_user_ids:
+        url_approachable_users = f"https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/owner_users/{surrounding_user_id}?offset=0&limit={entire_limit}"
+        response_approachable_users = requests.get(url_approachable_users)
+        sub_approachable_users = response_approachable_users.json()
+        sub_approachable_users_ids = {user["user_id"]: 0 for user in sub_approachable_users}
+        # 辞書にあるかどうかを確認し，あればカウントをインクリメント
+        for approachable_user_id in sub_approachable_users_ids:
+            if approachable_user_id in approachable_user_dict:
+                approachable_user_dict[approachable_user_id] += 1
+            # 辞書のサイズが上限未満なら，追加可能
+            elif len(approachable_user_dict) < dict_limit:
+                approachable_user_dict[approachable_user_id] = 1
+    # 既にsurrounding_user_idsにいるユーザは除外
+    for surrounding_user_id in surrounding_user_ids:
+        approachable_user_dict.pop(surrounding_user_id, None)
+
+    # 名刺の多い順にソート
+    sorted_approachable_user_ids_with_count = sorted(approachable_user_dict.items(), key=lambda x: x[1], reverse=True)
+    # 上位 {min(selection_limit, len(approachable_user_dict))} 人を取得
+    selection_num = min(selection_limit, len(approachable_user_dict))
+    selected_approachable_user_ids_with_count = sorted_approachable_user_ids_with_count[:selection_num]
+    return selected_approachable_user_ids_with_count
+
+
 # タイトル
 st.title("ランダムid")
 a_id = get_random_user()
 surrounding_users = get_surrounding_users(a_id)
+approachable_users = get_approachable_users(surrounding_users)
 st.write(a_id)
 st.write(surrounding_users)
+st.write(approachable_users)
