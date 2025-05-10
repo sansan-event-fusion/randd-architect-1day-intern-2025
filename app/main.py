@@ -4,6 +4,7 @@ import plotly.express as px
 import requests
 import streamlit as st
 
+
 # circuitAPI
 def get_user_id(offset):
     url = f"https://circuit-trial.stg.rd.ds.sansan.com/api/cards/?offset={offset}&limit=1"
