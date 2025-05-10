@@ -9,7 +9,7 @@ st.title("新規事業開時に助けになりそうな人")
 
 
 def get_data():
-    url = 'https://circuit-trial.stg.rd.ds.sansan.com/api/cards/'
+    url = "https://circuit-trial.stg.rd.ds.sansan.com/api/cards/"
     params = {
         "offset": 0,
         "limit": 100
