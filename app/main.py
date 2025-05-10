@@ -155,10 +155,11 @@ with tab3:
         from_user = name_map.get(str(row.owner_user_id), str(row.owner_user_id))
         to_user = name_map.get(str(row.user_id), str(row.user_id))
         G.add_edge(from_user, to_user)
-
+        
     net = Network(height="700px", width="100%", directed=True)
     net.from_nx(G)
     net.repulsion(node_distance=150, central_gravity=0.2)
+
 
     net.save_graph("contact_network.html")
     components.html(open("contact_network.html", "r", encoding="utf-8").read(), height=750)
