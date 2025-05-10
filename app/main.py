@@ -1,11 +1,10 @@
 import os
 import random
-from pathlib import Path
 import re
-
 import requests
 import streamlit as st
 import pydeck as pdk
+from pathlib import Path
 from dotenv import load_dotenv
 from geopy.geocoders import Nominatim
 from geopy.extra.rate_limiter import RateLimiter
@@ -46,30 +45,17 @@ if not contacts:
     st.stop()
 contact = random.choice(contacts)
 owner_company_id = contact.get("owner_company_id")
-# st.write(f"選択されたowner_company_id: {owner_company_id}")
-
-# # 選択した会社の情報を表示
-# st.subheader("選択された会社情報")
-# st.write({
-#     "owner_company_id": owner_company_id,
-#     "company_name": contact.get("company_name"),
-#     "department_name": contact.get("department_name"),
-#     "address": contact.get("address"),
-# })
 
 # 2. owner_company_idでcontacts_owner_company_api_urlを利用して名刺を取得
 contacts_owner_company_url = CONTACTS_OWNER_COMPANY_API_URL.format(owner_company_id=owner_company_id)
-# st.write(f"owner companyのcontacts取得URL: {contacts_owner_company_url}")
 owner_contacts_res = requests.get(contacts_owner_company_url, timeout=5)
 if owner_contacts_res.status_code != 200:
     st.write("owner companyのcontacts取得失敗")
     st.stop()
 owner_contacts = owner_contacts_res.json()
-# st.write(f"この会社が持つ名刺数: {len(owner_contacts)}")
 
 # 3. 取引相手user_idを取得
 user_ids = set(c.get("user_id") for c in owner_contacts if c.get("user_id"))
-# st.write(f"取引相手user_id一覧: {list(user_ids)}")
 
 # 4. user_idでcardsからaddressを取得
 def geocode_address(address: str) -> tuple[float | None, float | None]:
@@ -95,18 +81,15 @@ for user_id in sample_user_ids:
     if not user_id:
         continue
     user_cards_url = CARDS_USER_API_URL.format(user_id=user_id)
-    # st.write(f"user_id: {user_id}の名刺取得URL: {user_cards_url}")
     user_cards_res = requests.get(user_cards_url, timeout=5)
     if user_cards_res.status_code != 200:
         continue
-    # st.write(f"取得した名刺数: {user_cards_res.json()}")
     user_card = user_cards_res.json()
     if isinstance(user_card, list):
         user_card = user_card[0] if user_card else {}
     if isinstance(user_card, dict):
         addr_str = user_card.get("address")
-    
-    st.write(f"取得した住所: {addr_str}")
+
     if not addr_str:
         continue
     # # 住所が空でない場合、geocode_addressを呼び出す
@@ -114,7 +97,6 @@ for user_id in sample_user_ids:
         lat, lon = geocode_address(addr_str)
         if lat and lon:
             addresses.append({"lat": lat, "lon": lon})
-        # time.sleep(0.2)  # API制限対策
 
 if not addresses:
     st.write("住所が取得できませんでした")
