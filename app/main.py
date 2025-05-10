@@ -1,10 +1,18 @@
+import numpy as np
 import pandas as pd
 import plotly.express as px
 import requests
 import streamlit as st
 
-
 # circuitAPI
+def get_user_id(offset):
+    url = f"https://circuit-trial.stg.rd.ds.sansan.com/api/cards/?offset={offset}&limit=1"
+    res = requests.get(url, timeout=(3, 10))
+    if res.status_code == 200:
+        return res.json()[0]["user_id"]
+    st.error("API request failed.")
+    return None
+
 def get_similar_top10_user(user_id):
     url = f"https://circuit-trial.stg.rd.ds.sansan.com/api/cards/{user_id}/similar_top10_users"
     res = requests.get(url, timeout=(3, 10))
@@ -13,8 +21,22 @@ def get_similar_top10_user(user_id):
     st.error("API request failed.")
     return None
 
+# user_idを入力
+if "user_id_input" not in st.session_state:
+    st.session_state.user_id_input = "9230809757"
+user_id = st.text_input("Enter User ID:", "2171722069", key="user_id_input")
 
-top10_json = get_similar_top10_user("2171722069")
+# user_idの候補をランダムに生成
+def set_random_user_id():
+    rng = np.random.default_rng()
+    offset = rng.integers(0, 2000)
+    st.session_state.user_id_input = get_user_id(offset)
+    # rerun は不要 — on_click 後に自動で再実行される
+
+st.button("Generate Random User ID", on_click=set_random_user_id)
+
+
+top10_json = get_similar_top10_user(user_id)
 
 # 国土地理院API
 GeospatialUrl = "https://msearch.gsi.go.jp/address-search/AddressSearch?q="
@@ -41,6 +63,7 @@ size = similarlity_scores
 min_score = min(size)
 max_score = max(size)
 normalized_scores = [(score - min_score) / (max_score - min_score) for score in size]
+normalized_scores = np.exp(normalized_scores)  # Apply exponential scaling
 
 
 similar_user_df = pd.DataFrame(
