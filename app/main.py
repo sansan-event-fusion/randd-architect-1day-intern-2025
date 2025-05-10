@@ -94,7 +94,7 @@ fig.update_layout(xaxis_tickangle=-45)
 
 st.plotly_chart(fig)
 
-top1 = top10.iloc[0]['user_id']
+top1 = top10.iloc[0]["user_id"]
 
 
 
