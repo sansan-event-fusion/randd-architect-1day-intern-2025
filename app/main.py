@@ -223,11 +223,33 @@ elif page == "営業活動履歴表示":
                             japan_geojson, tooltip=folium.GeoJsonTooltip(fields=["tooltip"], aliases=[""], labels=False)
                         ).add_to(m)
 
-                        st_folium(m, use_container_width=True, height=600)
+                        from shapely.geometry import Point, shape
 
-                        # ここでは暫定的に、選択ドロップダウンで対応
+                        # 地図を表示しクリックイベントを取得
+                        map_return = st_folium(m, use_container_width=True, height=600)
+
+                        clicked_prefecture = None
+                        if map_return and map_return.get("last_clicked"):
+                            clicked_latlng = map_return["last_clicked"]
+                            click_point = Point(clicked_latlng["lng"], clicked_latlng["lat"])
+
+                            for feature in japan_geojson["features"]:
+                                polygon = shape(feature["geometry"])
+                                if polygon.contains(click_point):
+                                    clicked_prefecture = feature["properties"]["name"]
+                                    break
+
                         prefecture_options = ["", *sorted(company_info["都道府県"].dropna().unique().tolist())]
-                        selected_prefecture = st.selectbox("都道府県を選択してください", prefecture_options)
+                        initial_index = 0
+                        if clicked_prefecture and clicked_prefecture in prefecture_options:
+                            initial_index = prefecture_options.index(clicked_prefecture)
+
+                        # ▼▼▼ 地図の後に配置された都道府県セレクトボックス ▼▼▼
+                        selected_prefecture = st.selectbox(
+                            "表示対象の都道府県を選択してください(地図クリックまたは選択)",
+                            prefecture_options,
+                            index=initial_index
+                        )
 
                         if selected_prefecture:
                             st.subheader(f"{selected_prefecture}: 名刺交換済みの企業の名刺情報")
@@ -237,6 +259,7 @@ elif page == "営業活動履歴表示":
                             )
                             cards_subset = cards_data[cards_data["user_id"].isin(target_user_ids)]
                             st.dataframe(cards_subset[["user_id", "full_name", "company_name", "address"]])
+
 
                 else:
                     st.error(f"交換データ取得エラー: {contact_res.status_code}")
