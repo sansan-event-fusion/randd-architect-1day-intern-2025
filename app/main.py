@@ -47,10 +47,6 @@ def get_contacts_data():
     return response.json()
 
 
-
-
-
-
 # Streamlit表示
 data = get_contacts_data()
 df = pd.DataFrame(data)
