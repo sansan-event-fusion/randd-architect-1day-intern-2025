@@ -20,18 +20,9 @@ _geocode = RateLimiter(
     error_wait_seconds=2.0,  # 失敗時の待機
 )
 
-CARDS_USER_API_URL = os.getenv(
-    "CARDS_USER_API_URL",
-    default="https://circuit-trial.stg.rd.ds.sansan.com/api/cards/{user_id}"
-)
-CONTACTS_API_URL = os.getenv(
-    "CONTACTS_API_URL", 
-    default="https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/"
-)
-CONTACTS_OWNER_COMPANY_API_URL = os.getenv(
-    "CONTACTS_OWNER_COMPANY_API_URL",
-    default="https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/owner_companies/{owner_company_id}"
-)
+CARDS_USER_API_URL = "https://circuit-trial.stg.rd.ds.sansan.com/api/cards/{user_id}"
+CONTACTS_API_URL = "https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/"
+CONTACTS_OWNER_COMPANY_API_URL = "https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/owner_companies/{owner_company_id}"
 
 if not CONTACTS_API_URL or not CONTACTS_OWNER_COMPANY_API_URL or not CARDS_USER_API_URL:
     st.write("環境変数が設定されていません。")
@@ -65,7 +56,7 @@ if owner_contacts_res.status_code != 200:
 owner_contacts = owner_contacts_res.json()
 
 # 3. 取引相手user_idを取得
-user_ids = {c.get("user_id") for c in owner_contacts if c.get("user_id")}
+user_ids = set(c.get("user_id") for c in owner_contacts if c.get("user_id"))  # noqa: C401
 
 # 4. user_idでcardsからaddressを取得
 def geocode_address(address: str) -> tuple[float | None, float | None]:
