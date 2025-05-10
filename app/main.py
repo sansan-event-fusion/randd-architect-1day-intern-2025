@@ -17,23 +17,22 @@ def get_random_user():
     response_user_card = requests.get(url_user_card, timeout=10)
     user_card = response_user_card.json()[0]
     user_id = user_card["user_id"]
-    return user_id
+    return user_id, user_card["full_name"], user_card["company_name"]
 
 
-def get_surrounding_users(owner_id, entire_limit=200, selection_limit=10):
-    # 指定ユーザの周辺ユーザをランダムに取得
+def get_surrounding_users(owner_id, entire_limit=100):
+    # 指定ユーザの周辺ユーザを100人取得
     url_surrounding_users = (
         f"https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/owner_users/{owner_id}?offset=0&limit={entire_limit}"
     )
     response_surrounding_users = requests.get(url_surrounding_users, timeout=10)
     surrounding_users = response_surrounding_users.json()
     surrounding_user_ids = [user["user_id"] for user in surrounding_users]
-    selected_surrounding_user_ids = random.sample(surrounding_user_ids, min(selection_limit, len(surrounding_user_ids)))
 
-    return selected_surrounding_user_ids
+    return surrounding_user_ids
 
 
-def get_approachable_users(surrounding_user_ids, entire_limit=200, selection_limit=20):
+def get_approachable_users(surrounding_user_ids, entire_limit=100, selection_limit=20):
     # アプローチ可能なユーザ辞書を用意
     approachable_user_dict: dict[str, int] = {}
     # 各ユーザに対してアプローチ可能なユーザを取得
@@ -70,12 +69,20 @@ def make_approachable_user_table(approachable_users):
     return table_data
 
 
-a_id = get_random_user()
+a_id, a_name, a_company = get_random_user()
 surrounding_users = get_surrounding_users(a_id)
 approachable_users = get_approachable_users(surrounding_users)
 # テーブルデータとして表示
 table_df = make_approachable_user_table(approachable_users)
 
-# これから繋がるべきユーザ
-st.title("これから繋がるべきユーザ選抜")
+
+st.title("これから繋がるべきユーザ選抜🔥")
+
+st.subheader("あなたの名刺")
+st.markdown(f"**{a_name}**  \n{a_company}")
+
+st.markdown("---")  # 区切り線
+
+# アプローチ候補
+st.subheader("アプローチ候補一覧📋 ")
 st.table(table_df)
