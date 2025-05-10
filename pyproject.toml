@@ -12,6 +12,8 @@ streamlit = "^1.43.2"
 streamlit-agraph = "^0.0.45"
 requests = "^2.32.3"
 pandas = "^2.2.3"
+networkx = "^3.4.2"
+matplotlib = "^3.10.3"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.11.2"
