@@ -6,14 +6,16 @@ import requests
 import streamlit as st
 from dotenv import load_dotenv
 
-load_dotenv(
-    Path(__file__).parent.parent / ".env"
-)
+load_dotenv(Path(__file__).parent.parent / ".env")
 
 API_KEY = os.getenv("API_KEY")
 HEALTH_API_URL = os.getenv("HEALTH_API_URL")
 CARDS_API_URL = os.getenv("CARDS_API_URL")
 CONTACTS_API_URL = os.getenv("CONTACTS_API_URL")
+if not API_KEY or not HEALTH_API_URL or not CARDS_API_URL or not CONTACTS_API_URL:
+    st.write("環境変数が設定されていません。")
+    st.stop()
+
 st.set_page_config(
     page_title="サンプルアプリ",
     page_icon=":guardsman:",
@@ -22,8 +24,6 @@ st.set_page_config(
 # サイドバー
 # タイトル
 st.title("サンプルアプリ")
-
-
 st.write("APIからデータを取得中...")
 # APIからデータを取得
 response = requests.get(CARDS_API_URL, timeout=5)
