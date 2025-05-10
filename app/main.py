@@ -14,6 +14,7 @@ def get_user_id(offset):
     st.error("API request failed.")
     return None
 
+
 def get_similar_top10_user(user_id):
     url = f"https://circuit-trial.stg.rd.ds.sansan.com/api/cards/{user_id}/similar_top10_users"
     res = requests.get(url, timeout=(3, 10))
@@ -22,10 +23,12 @@ def get_similar_top10_user(user_id):
     st.error("API request failed.")
     return None
 
+
 # user_idを入力
 if "user_id_input" not in st.session_state:
     st.session_state.user_id_input = "9230809757"
 user_id = st.text_input("Enter User ID:", "2171722069", key="user_id_input")
+
 
 # user_idの候補をランダムに生成
 def set_random_user_id():
@@ -33,6 +36,7 @@ def set_random_user_id():
     offset = rng.integers(0, 2000)
     st.session_state.user_id_input = get_user_id(offset)
     # rerun は不要 — on_click 後に自動で再実行される
+
 
 st.button("Generate Random User ID", on_click=set_random_user_id)
 
