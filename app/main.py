@@ -32,7 +32,7 @@ def get_surrounding_users(owner_id, entire_limit=100):
     return surrounding_user_ids
 
 
-def get_approachable_users(surrounding_user_ids, entire_limit=100, selection_limit=20):
+def get_approachable_users(surrounding_user_ids, owner_id, entire_limit=100, selection_limit=20):
     # アプローチ可能なユーザ辞書を用意
     approachable_user_dict: dict[str, int] = {}
     # 各ユーザに対してアプローチ可能なユーザを取得
@@ -50,6 +50,8 @@ def get_approachable_users(surrounding_user_ids, entire_limit=100, selection_lim
     # 既にsurrounding_user_idsにいるユーザは除外
     for surrounding_user_id in surrounding_user_ids:
         approachable_user_dict.pop(surrounding_user_id, None)
+    # 自分自身は除外
+    approachable_user_dict.pop(owner_id, None)
 
     # 名刺の多い順にソート
     sorted_approachable_user_ids_with_count = sorted(approachable_user_dict.items(), key=lambda x: x[1], reverse=True)
@@ -71,7 +73,7 @@ def make_approachable_user_table(approachable_users):
 
 a_id, a_name, a_company = get_random_user()
 surrounding_users = get_surrounding_users(a_id)
-approachable_users = get_approachable_users(surrounding_users)
+approachable_users = get_approachable_users(surrounding_users, a_id)
 # テーブルデータとして表示
 table_df = make_approachable_user_table(approachable_users)
 
