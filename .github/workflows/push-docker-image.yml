@@ -1,4 +1,5 @@
 name: Push Docker Image to ECR
+run-name: "[${{ github.actor }}] Push Docker Image to ECR"
 
 on:
   workflow_dispatch:

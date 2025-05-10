@@ -10,8 +10,8 @@ poetry run streamlit run app/main.py
 ## Run on Docker
 
 ```bash
-docker build . -f Dockerfile --target dev --tag app
-docker run -it -p 8080:8080 -v $(pwd)/:/app/ app
+docker build . -f Dockerfile --target prod --tag app
+docker run -it --read-only -p 8080:8080 app
 ```
 
 ## Test
