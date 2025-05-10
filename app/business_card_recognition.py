@@ -1,5 +1,6 @@
 import io
 import re
+import typing
 
 import cv2
 import easyocr
@@ -231,9 +232,19 @@ def _extract_single_field(
     text_blocks: list[tuple],
     used_blocks: set,
     markers: set[str],
-    process_func: callable,
+    process_func: typing.Callable[[str, int, set, set[str]], str | None],
 ) -> str | None:
-    """Extract a single field (department or title) from text blocks."""
+    """Extract a single field (department or title) from text blocks.
+
+    Args:
+        text_blocks: List of tuples containing OCR results
+        used_blocks: Set of already processed block indices
+        markers: Set of marker strings to look for
+        process_func: Function that processes a single text block
+
+    Returns:
+        Extracted field text or None if not found
+    """
     for i, (_, text, _) in enumerate(text_blocks):
         if not _check_text_validity(text, used_blocks, i):
             continue
