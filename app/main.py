@@ -36,12 +36,11 @@ def show_user_data(user_id):
 # こんな感じで使う
 # IDに対してその人のデータを表示させるもの
 def show_card_data(user_data):
-    st.text("ユーザー名: " + user_data[0]['full_name'])
-    st.text("役職: " + user_data[0]['position'])
-    st.text("会社名: " + user_data[0]['company_name'])
-    st.text("住所: " + str(user_data[0]['address']))
-    st.text("電話番号: " + str(user_data[0]['phone_number']))
-    
+    st.text("ユーザー名: " + user_data[0]["full_name"])
+    st.text("役職: " + user_data[0]["position"])
+    st.text("会社名: " + user_data[0]["company_name"])
+    st.text("住所: " + str(user_data[0]["address"]))
+    st.text("電話番号: " + str(user_data[0]["phone_number"]))
 
 
 # 100件分、期間で全ての情報を取得する件数
