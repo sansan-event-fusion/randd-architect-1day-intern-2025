@@ -79,5 +79,3 @@ else:
             st.altair_chart(chart, use_container_width=True)
     else:
         st.error(f"API取得に失敗しました（ステータスコード: {response.status_code}）")
-  
-
