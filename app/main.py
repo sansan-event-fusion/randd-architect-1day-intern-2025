@@ -34,9 +34,7 @@ def get_data():
 # API: 個人の名刺データ取得
 def show_user_data(user_id):
     url = f"https://circuit-trial.stg.rd.ds.sansan.com/api/cards/{user_id}"
-    headers = {
-        "accept": "application/json"
-    }
+    headers = {"accept": "application/json"}
     response = requests.get(url, headers=headers, timeout=10)
     if response.status_code == 200:
         return response.json()
