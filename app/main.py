@@ -71,8 +71,8 @@ data = get_contacts_data()
 df = pd.DataFrame(data)
 st.dataframe(df)
 
-ranking = df['user_id'].value_counts().reset_index()
-ranking.columns = ['user_id', 'count']
+ranking = df["user_id"].value_counts().reset_index()
+ranking.columns = ["user_id", "count"]
 
 st.subheader("Ranking")
 st.write("ユーザーIDのランキング")
