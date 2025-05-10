@@ -2,21 +2,12 @@ import pandas as pd
 import plotly.express as px
 import requests
 import streamlit as st
-import requests
-import plotly.express as px
 
 
 # タイトル
 st.title("新規事業開時に助けになりそうな人")
 
-# path = Path(__file__).parent / "dummy_data.csv"
-# df_dummy = pd.read_csv(path, dtype=str)
 
-#url = 'https://circuit-trial.stg.rd.ds.sansan.com/api/cards/count'
-#response = requests.get(url)
-#print(response.json())
-
-#response = requests.post(url, json={"key": "value"})
 def get_data():
     url = 'https://circuit-trial.stg.rd.ds.sansan.com/api/cards/'
     params = {
@@ -114,16 +105,7 @@ for i in range(11):
 
 
 
-# st.text("ユーザー名: " + output[0]['full_name'])
 
-#print(output[0]['full_name'])
-#print(output[0]['position'])
-
-#st.text("ユーザー名: " + output[0]['full_name'])
-
-
-
-#show_card_data(show_user_data(18527820))
 
 
 
