@@ -46,6 +46,7 @@ else:
     if response.status_code == 200:
         data = response.json()
         df = pd.DataFrame(data)
+        st.dataframe(df)
 
         if df.empty or "created_at" not in df.columns:
             st.warning("データが見つかりませんでした。")
