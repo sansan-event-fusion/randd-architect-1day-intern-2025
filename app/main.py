@@ -21,7 +21,7 @@ def get_random_user():
 
 
 def get_surrounding_users(owner_id, entire_limit=100):
-    # 指定ユーザの周辺ユーザを100人取得
+    # 指定ユーザの隣接ユーザを100人取得
     url_surrounding_users = (
         f"https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/owner_users/{owner_id}?offset=0&limit={entire_limit}"
     )
@@ -35,7 +35,7 @@ def get_surrounding_users(owner_id, entire_limit=100):
 def get_approachable_users(surrounding_user_ids, owner_id, entire_limit=100, selection_limit=20):
     # アプローチ可能なユーザ辞書を用意
     approachable_user_dict: dict[str, int] = {}
-    # 各ユーザに対してアプローチ可能なユーザを取得
+    # 各隣接ユーザに対してアプローチ可能なユーザを取得
     for surrounding_user_id in surrounding_user_ids:
         url_approachable_users = f"https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/owner_users/{surrounding_user_id}?offset=0&limit={entire_limit}"
         response_approachable_users = requests.get(url_approachable_users, timeout=10)
@@ -47,7 +47,7 @@ def get_approachable_users(surrounding_user_ids, owner_id, entire_limit=100, sel
                 approachable_user_dict[approachable_user_id] += 1
             else:
                 approachable_user_dict[approachable_user_id] = 1
-    # 既にsurrounding_user_idsにいるユーザは除外
+    # 隣接ユーザは除外
     for surrounding_user_id in surrounding_user_ids:
         approachable_user_dict.pop(surrounding_user_id, None)
     # 自分自身は除外
@@ -83,8 +83,7 @@ st.title("これから繋がるべきユーザ選抜🔥")
 st.subheader("あなたの名刺")
 st.markdown(f"**{a_name}**  \n{a_company}")
 
-st.markdown("---")  # 区切り線
+st.markdown("---")
 
-# アプローチ候補
 st.subheader("アプローチ候補一覧📋 ")
 st.table(table_df)
