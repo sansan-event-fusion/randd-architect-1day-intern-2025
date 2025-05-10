@@ -8,7 +8,7 @@ import requests
 # タイトル
 st.title("名刺データ")
 
-url = “https://circuit-trial.stg.rd.ds.sansan.com/api/“
+url = "https://circuit-trial.stg.rd.ds.sansan.com/api/"
 
 response = requests.get(url + "cards/?offset=0&limit=100", json=data)
 
