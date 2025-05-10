@@ -17,7 +17,7 @@ def get_random_user():
     response_user_card = requests.get(url_user_card, timeout=10)
     user_card = response_user_card.json()[0]
     user_id = user_card["user_id"]
-    return user_id, user_card["full_name"], user_card["company_name"]
+    return user_id, user_card
 
 
 def get_surrounding_users(owner_id, entire_limit=100):
@@ -71,7 +71,7 @@ def make_approachable_user_table(approachable_users):
     return table_data
 
 
-a_id, a_name, a_company = get_random_user()
+a_id, a_card = get_random_user()
 surrounding_users = get_surrounding_users(a_id)
 approachable_users = get_approachable_users(surrounding_users, a_id)
 # テーブルデータとして表示
@@ -81,7 +81,7 @@ table_df = make_approachable_user_table(approachable_users)
 st.title("これから繋がるべきユーザ選抜🔥")
 
 st.subheader("あなたの名刺")
-st.markdown(f"**{a_name}**  \n{a_company}")
+st.markdown(f"**{a_card['full_name']}**  \n{a_card['company_name']}  \n{a_card['phone_number']}")
 
 st.markdown("---")
 
