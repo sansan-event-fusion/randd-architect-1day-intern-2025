@@ -71,20 +71,21 @@ else:
     # おすすめユーザー
     data_recommendation = get_recommendation_users(user_id)
 
-    if len(data_recommendation) == 0:
-        st.info("おすすめの相手は見つかりませんでした。")
-    else:
-        st.write("")
-        for data_recommendation_item in data_recommendation:
-            recommendation_user_id = data_recommendation_item["user_id"]
-            data_owner = get_contact_histories_by_user_id(recommendation_user_id)
-            st.write(f"🏢 **会社名**: {data_recommendation_item['company_name']}")
-            st.write(f"👤 **名前**: {data_recommendation_item['full_name']}")
-
-            recommendation_time = get_max_contact_time(data_owner)
-            st.write(f"📅 **交換におすすめの時間**: {recommendation_time['hour']}:00")
-
-            with st.expander(f"{data_recommendation_item['full_name']}さんの名刺交換情報"):
-                st.write("時間帯ごとの名刺交換回数")
-                plot_contact_history_by_time(data_owner)
+    if st.button("検索"):
+        if len(data_recommendation) == 0:
+            st.info("おすすめの相手は見つかりませんでした。")
+        else:
             st.write("")
+            for data_recommendation_item in data_recommendation:
+                recommendation_user_id = data_recommendation_item["user_id"]
+                data_owner = get_contact_histories_by_user_id(recommendation_user_id)
+                st.write(f"🏢 **会社名**: {data_recommendation_item['company_name']}")
+                st.write(f"👤 **名前**: {data_recommendation_item['full_name']}")
+
+                recommendation_time = get_max_contact_time(data_owner)
+                st.write(f"📅 **交換におすすめの時間**: {recommendation_time['hour']}:00")
+
+                with st.expander(f"{data_recommendation_item['full_name']}さんの名刺交換情報"):
+                    st.write("時間帯ごとの名刺交換回数")
+                    plot_contact_history_by_time(data_owner)
+                st.write("")
