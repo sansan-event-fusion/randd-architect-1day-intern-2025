@@ -9,7 +9,6 @@ def plot_contact_history_by_date(data):
     created_at_list = [item["created_at"] for item in data if "created_at" in item]
     df_created_at_list = pd.DataFrame({"created_at": pd.to_datetime(created_at_list)})
 
-    # 週単位の集計:週の開始日(月曜)を基準に集計
     df_created_at_list["week_start"] = df_created_at_list["created_at"].dt.to_period("W").apply(lambda r: r.start_time)
 
     df_count = df_created_at_list.groupby("week_start").size().reset_index(name="交換回数")
