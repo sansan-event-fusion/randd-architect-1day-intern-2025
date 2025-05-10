@@ -41,7 +41,7 @@ else:
     }
 
     # API呼び出し
-    response = requests.get(base_url, params=params)
+    response = requests.get(base_url, params=params, timeout=100)
 
     if response.status_code == 200:
         data = response.json()
