@@ -187,7 +187,26 @@ def _fetch_contacts_page(offset: int, limit: int) -> list | None:
         return None
 
 
-def fetch_all_contacts():
+def _fetch_page_with_retry(offset: int, limit: int, max_retries: int, retry_delay: int) -> list | None:
+    """Fetch a single page with retry logic."""
+    for _ in range(max_retries):
+        data = _fetch_contacts_page(offset, limit)
+        if data is not None:
+            return data
+        time.sleep(retry_delay)
+
+    st.warning(f"Failed to fetch contacts at offset {offset} after {max_retries} retries")
+    return None
+
+
+def _process_contacts_data(contacts: list) -> pd.DataFrame:
+    """Process the collected contacts data."""
+    if not contacts:
+        return pd.DataFrame()
+    return pd.DataFrame(contacts)
+
+
+def fetch_all_contacts() -> pd.DataFrame:
     """Fetch all contact history."""
     contacts = []
     offset = 0
@@ -196,16 +215,8 @@ def fetch_all_contacts():
     retry_delay = 2
 
     while True:
-        for _ in range(max_retries):
-            data = _fetch_contacts_page(offset, limit)
-            if data is not None:
-                break
-            time.sleep(retry_delay)
-        else:
-            st.warning(f"Failed to fetch contacts at offset {offset} after {max_retries} retries")
-            break
-
-        if not data:
+        data = _fetch_page_with_retry(offset, limit, max_retries, retry_delay)
+        if data is None or not data:
             break
 
         contacts.extend(data)
@@ -214,10 +225,7 @@ def fetch_all_contacts():
 
         offset += limit
 
-    if not contacts:
-        return pd.DataFrame()
-
-    return pd.DataFrame(contacts)
+    return _process_contacts_data(contacts)
 
 
 def is_in_city(address: str, city_name: str, city_info: dict) -> bool:

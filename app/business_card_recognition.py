@@ -227,6 +227,25 @@ def _process_title(text: str, block_index: int, used_blocks: set, title_markers:
     return None
 
 
+def _extract_single_field(
+    text_blocks: list[tuple],
+    used_blocks: set,
+    markers: set[str],
+    process_func: callable,
+) -> str | None:
+    """Extract a single field (department or title) from text blocks."""
+    for i, (_, text, _) in enumerate(text_blocks):
+        if not _check_text_validity(text, used_blocks, i):
+            continue
+
+        text = text.strip()
+        result = process_func(text, i, used_blocks, markers)
+        if result:
+            return result
+
+    return None
+
+
 def extract_department_and_title(text_blocks: list[tuple], used_blocks: set) -> tuple[str | None, str | None]:
     """Extract department and title from text blocks."""
     department_markers = {"部", "課", "グループ", "チーム", "本部", "事業部", "支社", "支店", "営業所"}
@@ -244,27 +263,8 @@ def extract_department_and_title(text_blocks: list[tuple], used_blocks: set) -> 
         "会長",
     }
 
-    department = None
-    title = None
-
-    for i, (_, text, _) in enumerate(text_blocks):
-        if not _check_text_validity(text, used_blocks, i):
-            continue
-
-        text = text.strip()
-
-        # Extract department
-        if not department:
-            department = _process_department(text, i, used_blocks, department_markers)
-            if department:
-                continue
-
-        # Extract title
-        if not title:
-            title = _process_title(text, i, used_blocks, title_markers)
-
-        if department and title:
-            break
+    department = _extract_single_field(text_blocks, used_blocks, department_markers, _process_department)
+    title = _extract_single_field(text_blocks, used_blocks, title_markers, _process_title)
 
     return department, title
 
