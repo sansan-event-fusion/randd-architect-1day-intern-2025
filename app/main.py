@@ -1,12 +1,13 @@
 import streamlit as st
 import requests
+import pandas as pd
 
 # タイトル
 st.title("名刺データ")
 
 url = "https://circuit-trial.stg.rd.ds.sansan.com/api/"
 
-# GETリクエスト（dataは不要）
+# GETリクエスト
 response = requests.get(url + "cards/?offset=0&limit=100", timeout=10)
 
 # JSONレスポンスを辞書として取得
