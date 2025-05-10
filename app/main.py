@@ -35,7 +35,7 @@ for user, owner_user in zip(df["user_id"], df["owner_user_id"]):
 df2 = pd.DataFrame(response2.json())
 st.dataframe(df2.head())"""
 
-for user, owner_user, dat in zip(df["user_id"], df["owner_user_id"], df["created_at"]):
+for user, owner_user, dat in zip(df["user_id"], df["owner_user_id"], df["created_at"], strict=False):
     if user not in already and cnt[user] >= 10:
         param = {"user_id": user}
         url2 = "https://circuit-trial.stg.rd.ds.sansan.com/api/cards/" + user
