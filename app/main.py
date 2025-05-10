@@ -40,8 +40,7 @@ def show_user_data(user_id):
     response = requests.get(url, headers=headers, timeout=10)
     if response.status_code == 200:
         return response.json()
-    else:
-        return None
+    return None
 
 
 #show_card_data(show_user_data(18527820))
