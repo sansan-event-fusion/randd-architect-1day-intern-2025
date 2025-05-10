@@ -1,10 +1,12 @@
 import time
+from typing import Any, Optional
 
 import pandas as pd
 import plotly.express as px
 import requests
 import streamlit as st
 import urllib3
+from plotly.graph_objects import Figure
 
 # SSLの警告を無視する設定
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -83,7 +85,7 @@ def extract_prefecture(address):
     if not isinstance(address, str):
         return None
 
-    for prefecture in PREFECTURE_COORDINATES.keys():
+    for prefecture in PREFECTURE_COORDINATES:
         if prefecture in address:
             return prefecture
     return None
@@ -120,7 +122,7 @@ def create_prefecture_map(cards_df):
     fig.update_layout(
         height=800,  # 高さを800ピクセルに
         width=None,  # 幅は自動調整（画面幅に合わせる）
-        margin=dict(l=0, r=0, t=30, b=0),  # マージンを最小限に
+        margin={"l": 0, "r": 0, "t": 30, "b": 0},  # マージンを最小限に
     )
 
     return fig
@@ -138,7 +140,7 @@ def fetch_all_cards():
                 f"{BASE_URL}/cards/",
                 params={"offset": offset, "limit": limit},
                 timeout=30,  # タイムアウトを30秒に設定
-                verify=False,  # SSL証明書の検証をスキップ
+                verify=True,  # SSL検証を有効化
             )
             response.raise_for_status()  # エラーレスポンスの場合は例外を発生
             data = response.json()
@@ -149,121 +151,143 @@ def fetch_all_cards():
                 break
             offset += limit
         except requests.exceptions.RequestException as e:
-            st.error(f"名刺データの取得中にエラーが発生しました: {str(e)}")
+            st.error(f"名刺データの取得中にエラーが発生しました: {e!s}")
             return pd.DataFrame()  # エラー時は空のDataFrameを返す
 
     return pd.DataFrame(cards)
 
 
+def _handle_contact_api_error(
+    e: Exception, offset: int, contacts: list, retries: int, max_retries: int, retry_delay: int
+) -> Optional[pd.DataFrame]:
+    """Handle API errors when fetching contacts."""
+    if retries == max_retries:
+        st.warning(f"コンタクト履歴の取得中にエラーが発生しました（offset={offset}）: {e!s}")
+        if contacts:  # 一部のデータが取得できている場合
+            st.info(f"一部のデータのみ表示します（{len(contacts)}件取得済み）")
+            return pd.DataFrame(contacts)
+        return pd.DataFrame()  # データが1件も取得できていない場合は空のDataFrameを返す
+    st.warning(f"APIリクエストに失敗しました（{retries}/{max_retries}回目）。{retry_delay}秒後にリトライします...")
+    time.sleep(retry_delay)
+    return None
+
+
+def _fetch_contacts_page(offset: int, limit: int) -> Optional[list]:
+    """Fetch a single page of contacts."""
+    try:
+        response = requests.get(
+            f"{BASE_URL}/contacts/",
+            params={"offset": offset, "limit": limit},
+            timeout=30,
+            verify=True,
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException:
+        return None
+
+
 def fetch_all_contacts():
-    """全てのコンタクト履歴を取得"""
+    """Fetch all contact history."""
     contacts = []
     offset = 0
     limit = 100
     max_retries = 3
-    retry_delay = 2  # seconds
+    retry_delay = 2
 
     while True:
-        retries = 0
-        while retries < max_retries:
-            try:
-                response = requests.get(
-                    f"{BASE_URL}/contacts/",
-                    params={"offset": offset, "limit": limit},
-                    timeout=30,  # タイムアウトを30秒に設定
-                    verify=False,  # SSL証明書の検証をスキップ
-                )
-                response.raise_for_status()  # エラーレスポンスの場合は例外を発生
-                data = response.json()
-                if not data:
-                    return pd.DataFrame(contacts)  # データがない場合は現在までのデータを返す
-                contacts.extend(data)
-                if len(data) < limit:
-                    return pd.DataFrame(contacts)  # 最後のページの場合
-                offset += limit
-                break  # 成功したらリトライループを抜ける
-            except requests.exceptions.RequestException as e:
-                retries += 1
-                if retries == max_retries:
-                    st.warning(f"コンタクト履歴の取得中にエラーが発生しました（offset={offset}）: {str(e)}")
-                    if contacts:  # 一部のデータが取得できている場合
-                        st.info(f"一部のデータのみ表示します（{len(contacts)}件取得済み）")
-                        return pd.DataFrame(contacts)
-                    return pd.DataFrame()  # データが1件も取得できていない場合は空のDataFrameを返す
-                st.warning(
-                    f"APIリクエストに失敗しました（{retries}/{max_retries}回目）。{retry_delay}秒後にリトライします..."
-                )
-                time.sleep(retry_delay)
+        for _ in range(max_retries):
+            data = _fetch_contacts_page(offset, limit)
+            if data is not None:
+                break
+            time.sleep(retry_delay)
+        else:
+            st.warning(f"Failed to fetch contacts at offset {offset} after {max_retries} retries")
+            break
 
-    return pd.DataFrame(contacts)  # 通常はここには到達しない
+        if not data:
+            break
+
+        contacts.extend(data)
+        if len(data) < limit:
+            break
+
+        offset += limit
+
+    if not contacts:
+        return pd.DataFrame()
+
+    return pd.DataFrame(contacts)
 
 
-def is_in_city(address, city_name, city_info):
-    """住所が指定された都市に属しているかを判定"""
+def is_in_city(address: str, city_name: str, city_info: dict) -> bool:
+    """Check if an address is in the given city."""
     if not isinstance(address, str):
         return False
-    return city_info["prefecture"] in address and any(
-        keyword in address for keyword in [city_name, city_info["prefecture"]]
-    )
+    return city_info["prefecture"] in address and city_name in address
 
 
-def create_major_cities_company_map(cards_df, selected_companies=None):
-    """主要都市における会社ごとの名刺分布を地図上に表示"""
-    # 都市ごとのデータを抽出
-    city_data = []
+def _process_city_companies(
+    city_name: str,
+    city_info: dict,
+    cards_df: pd.DataFrame,
+    selected_companies: list[str] | None = None,
+) -> list[dict]:
+    """Process company data for a specific city."""
+    city_cards = cards_df[cards_df["address"].apply(lambda x, cn=city_name, ci=city_info: is_in_city(x, cn, ci))]
+
+    if selected_companies:
+        city_cards = city_cards[city_cards["company"].isin(selected_companies)]
+
+    companies = city_cards["company"].value_counts()
+
+    return [
+        {
+            "lat": city_info["lat"],
+            "lon": city_info["lon"],
+            "company": company,
+            "count": count,
+            "city": city_name,
+        }
+        for company, count in companies.items()
+    ]
+
+
+def create_major_cities_company_map(
+    cards_df: pd.DataFrame, selected_companies: list[str] | None = None
+) -> Figure | None:
+    """Create a map showing company distribution across major cities."""
+    all_city_data = []
+
     for city_name, city_info in MAJOR_CITIES.items():
-        city_mask = cards_df["address"].apply(lambda x: is_in_city(x, city_name, city_info))
-        city_cards = cards_df[city_mask]
+        city_data = _process_city_companies(city_name, city_info, cards_df, selected_companies)
+        all_city_data.extend(city_data)
 
-        if len(city_cards) > 0:
-            # 会社ごとの集計
-            company_counts = city_cards["company_name"].value_counts()
-            # 上位10社のみを抽出（選択された会社がない場合）
-            if selected_companies is None:
-                top_companies = company_counts.head(10)
-            else:
-                # 選択された会社のデータのみを抽出
-                top_companies = company_counts[company_counts.index.isin(selected_companies)]
-
-            for company, count in top_companies.items():
-                city_data.append(
-                    {
-                        "city": city_name,
-                        "company": company,
-                        "count": count,
-                        "lat": city_info["lat"],
-                        "lon": city_info["lon"],
-                    }
-                )
-
-    if not city_data:
+    if not all_city_data:
+        st.warning("No data available for visualization")
         return None
 
-    city_df = pd.DataFrame(city_data)
+    df = pd.DataFrame(all_city_data)
 
-    # 地図の作成
     fig = px.scatter_mapbox(
-        city_df,
+        df,
         lat="lat",
         lon="lon",
         size="count",
         color="company",
         hover_name="company",
-        hover_data={"city": True, "count": True, "lat": False, "lon": False, "company": False},
-        title="主要都市における会社別名刺数の分布",
+        hover_data={"count": True, "city": True, "lat": False, "lon": False},
+        title="Major Cities Company Distribution",
         mapbox_style="carto-positron",
         center={"lat": 37.5, "lon": 137},
         zoom=4,
     )
 
-    # レイアウトの調整
     fig.update_layout(
-        height=800,  # 高さを800ピクセルに
-        width=None,  # 幅は自動調整（画面幅に合わせる）
-        margin=dict(l=0, r=0, t=30, b=0),  # マージンを最小限に
-        legend_title_text="会社名",
+        height=800,
+        width=None,
+        margin={"l": 0, "r": 0, "t": 30, "b": 0},
         showlegend=True,
-        legend={"itemsizing": "constant"},
     )
 
     return fig
@@ -274,103 +298,117 @@ def get_top_companies(cards_df, n=30):
     return cards_df["company_name"].value_counts().head(n).index.tolist()
 
 
-def show_visualization():
-    """データの可視化を行う"""
-    st.header("データ可視化")
+def _create_time_series_plot(contacts_df: pd.DataFrame) -> tuple[Any, pd.Series]:
+    """Create time series plot for contacts."""
+    time_column = next(
+        col for col in contacts_df.columns if any(x in col.lower() for x in ["timestamp", "time", "date", "created"])
+    )
 
-    # データの取得
-    with st.spinner("名刺データを取得中..."):
-        cards_df = fetch_all_cards()
+    contacts_df["timestamp"] = pd.to_datetime(contacts_df[time_column])
+    contacts_df["date"] = contacts_df["timestamp"].dt.date
+    daily_contacts = contacts_df["date"].value_counts().sort_index()
 
-    if cards_df.empty:
-        st.error("名刺データの取得に失敗しました。")
-        return
+    # 時系列グラフの作成
+    fig = px.line(
+        x=daily_contacts.index,
+        y=daily_contacts.values,
+        title="日別コンタクト数の推移",
+        labels={"x": "日付", "y": "コンタクト数"},
+    )
+    return fig, daily_contacts
 
-    with st.spinner("コンタクト履歴を取得中..."):
-        contacts_df = fetch_all_contacts()
 
+def _create_contact_type_plot(contacts_df: pd.DataFrame) -> Optional[Any]:
+    """Create contact type distribution plot."""
+    if "type" not in contacts_df.columns:
+        return None
+
+    contact_types = contacts_df["type"].value_counts()
+    return px.pie(
+        values=contact_types.values,
+        names=contact_types.index,
+        title="コンタクトタイプの分布",
+    )
+
+
+def _display_company_selection(cards_df: pd.DataFrame) -> list[str] | None:
+    """Display company selection widget and return selected companies."""
+    top_companies = get_top_companies(cards_df)
+
+    st.sidebar.markdown("### 会社の選択")
+    select_all = st.sidebar.checkbox("全ての会社を表示", value=False)
+
+    if select_all:
+        return None
+
+    selected_companies = st.sidebar.multiselect(
+        "表示する会社を選択してください",
+        options=top_companies,
+        default=top_companies[:5] if len(top_companies) > 5 else top_companies,
+    )
+
+    return selected_companies if selected_companies else None
+
+
+def _display_contact_analysis(contacts_df: pd.DataFrame) -> None:
+    """Display contact analysis visualizations."""
     if contacts_df.empty:
-        st.error("コンタクト履歴の取得に失敗しました。")
+        st.warning("コンタクト履歴のデータがありません。")
         return
 
-    # タブの作成
-    tab1, tab2, tab3 = st.tabs(["都道府県分布", "主要都市の企業分布", "コンタクト履歴分析"])
+    st.markdown("## コンタクト履歴の分析")
+
+    # Time series plot
+    fig_time, daily_contacts = _create_time_series_plot(contacts_df)
+    if fig_time:
+        st.plotly_chart(fig_time, use_container_width=True)
+
+        st.markdown("### 統計情報")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("総コンタクト数", len(contacts_df))
+        with col2:
+            st.metric("1日あたりの平均", f"{daily_contacts.mean():.1f}")
+        with col3:
+            st.metric("最大コンタクト数/日", daily_contacts.max())
+
+    # Contact type plot
+    fig_type = _create_contact_type_plot(contacts_df)
+    if fig_type:
+        st.plotly_chart(fig_type, use_container_width=True)
+
+
+def show_visualization():
+    """Show data visualization dashboard."""
+    st.title("名刺データの可視化")
+
+    # Fetch data
+    cards_df = fetch_all_cards()
+    if cards_df.empty:
+        st.error("名刺データを取得できませんでした。")
+        return
+
+    contacts_df = fetch_all_contacts()
+
+    # Company selection
+    selected_companies = _display_company_selection(cards_df)
+
+    # Display maps
+    st.markdown("## 地理的分布")
+
+    tab1, tab2 = st.tabs(["都道府県マップ", "主要都市マップ"])
 
     with tab1:
-        st.subheader("都道府県別名刺数の分布")
-        fig = create_prefecture_map(cards_df)
-        st.plotly_chart(fig, use_container_width=True)
+        prefecture_map = create_prefecture_map(cards_df)
+        st.plotly_chart(prefecture_map, use_container_width=True)
 
     with tab2:
-        st.subheader("主要都市における企業分布")
-        # 上位の会社を取得
-        top_companies = get_top_companies(cards_df)
-        # 選択された会社のみを表示
-        selected_companies = st.multiselect(
-            "表示する企業を選択（複数選択可）",
-            options=top_companies,
-            default=top_companies[:5],  # デフォルトで上位5社を選択
-        )
-        if selected_companies:
-            fig = create_major_cities_company_map(cards_df, selected_companies)
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.warning("企業を1つ以上選択してください。")
+        city_map = create_major_cities_company_map(cards_df, selected_companies)
+        if city_map:
+            st.plotly_chart(city_map, use_container_width=True)
 
-    with tab3:
-        st.subheader("コンタクト履歴の分析")
-        # コンタクト履歴の時系列分析
-        if not contacts_df.empty:
-            # APIのレスポンス構造に応じて適切なカラムを使用
-            try:
-                # タイムスタンプのカラム名を確認
-                time_column = next(
-                    col
-                    for col in contacts_df.columns
-                    if any(x in col.lower() for x in ["timestamp", "time", "date", "created"])
-                )
-
-                contacts_df["timestamp"] = pd.to_datetime(contacts_df[time_column])
-                contacts_df["date"] = contacts_df["timestamp"].dt.date
-                daily_contacts = contacts_df["date"].value_counts().sort_index()
-
-                # 時系列グラフの作成
-                fig = px.line(
-                    x=daily_contacts.index,
-                    y=daily_contacts.values,
-                    title="日別コンタクト数の推移",
-                    labels={"x": "日付", "y": "コンタクト数"},
-                )
-                st.plotly_chart(fig, use_container_width=True)
-
-                # データの詳細を表示
-                st.write("### データの詳細")
-                st.write(f"総コンタクト数: {len(contacts_df)}")
-                st.write(f"期間: {daily_contacts.index.min()} から {daily_contacts.index.max()}")
-
-                # 利用可能なカラムを確認
-                if "type" in contacts_df.columns:
-                    # コンタクトタイプの分布
-                    contact_types = contacts_df["type"].value_counts()
-                    fig = px.pie(
-                        values=contact_types.values,
-                        names=contact_types.index,
-                        title="コンタクトタイプの分布",
-                    )
-                    st.plotly_chart(fig, use_container_width=True)
-
-                # データフレームの最初の数行を表示
-                st.write("### データサンプル")
-                st.dataframe(contacts_df.head())
-
-            except Exception as e:
-                st.error(f"データの分析中にエラーが発生しました: {str(e)}")
-                st.write("### 利用可能なカラム:")
-                st.write(contacts_df.columns.tolist())
-                st.write("### データサンプル:")
-                st.dataframe(contacts_df.head())
-        else:
-            st.warning("コンタクト履歴のデータがありません。")
+    # Display contact analysis
+    _display_contact_analysis(contacts_df)
 
 
 if __name__ == "__main__":

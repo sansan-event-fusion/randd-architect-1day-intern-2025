@@ -55,7 +55,7 @@ def extract_name(text_blocks: List[tuple], used_blocks: set) -> Optional[str]:
         "会長",
     }
 
-    for i, (box, text, conf) in enumerate(text_blocks):
+    for i, (_, text, _) in enumerate(text_blocks):
         text = text.strip()
         if not text or i in used_blocks:
             continue
@@ -84,7 +84,7 @@ def extract_company(text_blocks: List[tuple], used_blocks: set) -> Optional[str]
         r".+[\s]*有限会社",
     ]
 
-    for i, (box, text, conf) in enumerate(text_blocks):
+    for i, (_, text, _) in enumerate(text_blocks):
         text = text.strip()
         if not text or i in used_blocks:
             continue
@@ -96,108 +96,152 @@ def extract_company(text_blocks: List[tuple], used_blocks: set) -> Optional[str]
     return None
 
 
+def _has_address_markers(text: str, postal_code_pattern: str, address_markers: set) -> bool:
+    """Check if text contains address markers or postal code."""
+    return bool(re.search(postal_code_pattern, text) or any(marker in text for marker in address_markers))
+
+
+def _collect_address_parts(
+    text_blocks: List[tuple],
+    current_index: int,
+    used_blocks: set,
+    postal_code_pattern: str,
+    address_markers: set,
+) -> List[str]:
+    """Collect address parts from adjacent blocks."""
+    address_parts = []
+
+    # Check previous block
+    if current_index > 0 and current_index - 1 not in used_blocks:
+        _, prev_text, _ = text_blocks[current_index - 1]
+        if _has_address_markers(prev_text.strip(), postal_code_pattern, address_markers):
+            address_parts.append(prev_text.strip())
+            used_blocks.add(current_index - 1)
+
+    # Add current block
+    _, current_text, _ = text_blocks[current_index]
+    address_parts.append(current_text.strip())
+    used_blocks.add(current_index)
+
+    # Check next block
+    if current_index < len(text_blocks) - 1 and current_index + 1 not in used_blocks:
+        _, next_text, _ = text_blocks[current_index + 1]
+        if _has_address_markers(next_text.strip(), postal_code_pattern, address_markers):
+            address_parts.append(next_text.strip())
+            used_blocks.add(current_index + 1)
+
+    return address_parts
+
+
 def extract_address(text_blocks: List[tuple], used_blocks: set) -> Optional[str]:
-    """Extract address using improved patterns."""
+    """Extract address from text blocks."""
     address_markers = {"県", "市", "区", "町", "村", "郡", "丁目", "番地", "号"}
     postal_code_pattern = r"〒?\d{3}[-−]?\d{4}"
 
-    for i, (box, text, conf) in enumerate(text_blocks):
-        text = text.strip()
-        if not text or i in used_blocks:
+    for i, (_, text, _) in enumerate(text_blocks):
+        if i in used_blocks:
             continue
 
-        # Check for postal code or address markers
-        if re.search(postal_code_pattern, text) or any(marker in text for marker in address_markers):
-            address_parts = []
+        text = text.strip()
+        if not text:
+            continue
 
-            # Look at previous block
-            if i > 0 and i - 1 not in used_blocks:
-                prev_box, prev_text, prev_conf = text_blocks[i - 1]
-                prev_text = prev_text.strip()
-                if re.search(postal_code_pattern, prev_text) or any(marker in prev_text for marker in address_markers):
-                    address_parts.append(prev_text)
-                    used_blocks.add(i - 1)
-
-            address_parts.append(text)
-            used_blocks.add(i)
-
-            # Look at next block
-            if i < len(text_blocks) - 1 and i + 1 not in used_blocks:
-                next_box, next_text, next_conf = text_blocks[i + 1]
-                next_text = next_text.strip()
-                if any(marker in next_text for marker in address_markers):
-                    address_parts.append(next_text)
-                    used_blocks.add(i + 1)
-
+        if _has_address_markers(text, postal_code_pattern, address_markers):
+            address_parts = _collect_address_parts(text_blocks, i, used_blocks, postal_code_pattern, address_markers)
             return " ".join(address_parts)
+
+    return None
+
+
+def _extract_contact_detail(
+    text_blocks: List[tuple],
+    used_blocks: set,
+    pattern: str,
+    identifier: str | None = None,
+) -> Optional[str]:
+    """Extract a specific contact detail (email, phone, or fax) from text blocks."""
+    for i, (_, text, _) in enumerate(text_blocks):
+        if i in used_blocks:
+            continue
+
+        text = text.strip()
+        if not text:
+            continue
+
+        if identifier and identifier not in text.upper():
+            continue
+
+        match = re.search(pattern, text)
+        if match:
+            used_blocks.add(i)
+            return match.group(1) if identifier else match.group(0)
+
     return None
 
 
 def extract_contact_info(
     text_blocks: List[tuple], used_blocks: set
 ) -> tuple[Optional[str], Optional[str], Optional[str]]:
-    """Extract email, phone number, and fax using improved patterns."""
-    email_pattern = r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
-    phone_pattern = r"(?:(?:TEL|電話|携帯)[\s:：]*)?" r"((?:\+81|0)\d{1,4}[-\s]?\d{1,4}[-\s]?\d{3,4})"
-    fax_pattern = r"(?:FAX[\s:：]*)?" r"((?:\+81|0)\d{1,4}[-\s]?\d{1,4}[-\s]?\d{3,4})"
+    """Extract email, phone number, and fax from text blocks."""
+    patterns = {
+        "email": r"[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}",
+        "phone": r"(?:(?:TEL|電話|携帯)[\s:：]*)?((?:\+81|0)\d{1,4}[-\s]?\d{1,4}[-\s]?\d{3,4})",
+        "fax": r"(?:FAX[\s:：]*)?((?:\+81|0)\d{1,4}[-\s]?\d{1,4}[-\s]?\d{3,4})",
+    }
 
-    email = None
-    phone = None
-    fax = None
-
-    for i, (box, text, conf) in enumerate(text_blocks):
-        text = text.strip()
-        if not text or i in used_blocks:
-            continue
-
-        # Extract email
-        if not email and "@" in text:
-            email_match = re.search(email_pattern, text)
-            if email_match:
-                email = email_match.group(0)
-                used_blocks.add(i)
-
-        # Extract phone
-        if not phone:
-            phone_match = re.search(phone_pattern, text)
-            if phone_match:
-                phone = phone_match.group(1)
-                used_blocks.add(i)
-
-        # Extract fax
-        if not fax and "FAX" in text.upper():
-            fax_match = re.search(fax_pattern, text)
-            if fax_match:
-                fax = fax_match.group(1)
-                used_blocks.add(i)
-
-        if email and phone and fax:
-            break
+    email = _extract_contact_detail(text_blocks, used_blocks, patterns["email"])
+    phone = _extract_contact_detail(text_blocks, used_blocks, patterns["phone"])
+    fax = _extract_contact_detail(text_blocks, used_blocks, patterns["fax"], "FAX")
 
     return email, phone, fax
 
 
+def _is_department_text(text: str, department_markers: set) -> bool:
+    """Check if text contains department markers."""
+    return any(marker in text for marker in department_markers)
+
+
+def _is_title_text(text: str, title_markers: set) -> bool:
+    """Check if text contains title markers."""
+    return any(marker in text for marker in title_markers)
+
+
 def extract_department_and_title(text_blocks: List[tuple], used_blocks: set) -> tuple[Optional[str], Optional[str]]:
-    """Extract department and title information."""
-    department_markers = {"部", "課", "グループ", "チーム", "本部", "事業部", "支社", "支店"}
-    title_markers = {"部長", "課長", "社長", "係長", "主任", "取締役", "代表", "リーダー", "マネージャー"}
+    """Extract department and title from text blocks."""
+    department_markers = {"部", "課", "グループ", "チーム", "本部", "事業部", "支社", "支店", "営業所"}
+    title_markers = {
+        "部長",
+        "課長",
+        "社長",
+        "係長",
+        "主任",
+        "取締役",
+        "代表",
+        "リーダー",
+        "マネージャー",
+        "所長",
+        "会長",
+    }
 
     department = None
     title = None
 
-    for i, (box, text, conf) in enumerate(text_blocks):
+    for i, (_, text, _) in enumerate(text_blocks):
+        if i in used_blocks:
+            continue
+
         text = text.strip()
-        if not text or i in used_blocks:
+        if not text:
             continue
 
         # Extract department
-        if not department and any(marker in text for marker in department_markers):
-            if not any(marker in text for marker in title_markers):
-                department = text
-                used_blocks.add(i)
+        if not department and _is_department_text(text, department_markers):
+            department = text
+            used_blocks.add(i)
+            continue
 
         # Extract title
-        if not title and any(marker in text for marker in title_markers):
+        if not title and _is_title_text(text, title_markers):
             title = text
             used_blocks.add(i)
 
@@ -209,7 +253,7 @@ def extract_department_and_title(text_blocks: List[tuple], used_blocks: set) -> 
 
 def extract_info_from_text(text_blocks: List[tuple]) -> Dict[str, str]:
     """Extract relevant information from OCR text blocks using improved extraction logic."""
-    used_blocks = set()  # Track which blocks have been used
+    used_blocks: set[int] = set()  # Track which blocks have been used
 
     # Extract information in order of reliability
     company = extract_company(text_blocks, used_blocks)
