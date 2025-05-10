@@ -94,7 +94,7 @@ st.write("意欲的に交流を行っているユーザー Top 10")
 for i in range(11):
     user_id = top10.iloc[i]["user_id"]
     user_data = show_user_data(user_id)
-    st.write(f"{i+1}人目")
+    st.write(f"{i + 1}人目")
     if user_data:
         show_card_data(user_data)
     else:
