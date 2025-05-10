@@ -11,6 +11,7 @@ python = ">=3.10,<3.14"
 streamlit = "^1.43.2"
 streamlit-agraph = "^0.0.45"
 requests = "^2.32.3"
+plotly = "^6.0.1"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.11.2"
