@@ -1,6 +1,6 @@
-import streamlit as st
-import requests
 import pandas as pd
+import requests
+import streamlit as st
 
 # タイトル
 st.title("名刺データ")
