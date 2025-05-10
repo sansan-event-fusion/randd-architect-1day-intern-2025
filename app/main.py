@@ -1,10 +1,8 @@
 import pandas as pd
+import networkx as nx
 import requests
 import streamlit as st
-import networkx as nx
-from pyvis.network import Network
 import streamlit.components.v1 as components
-
 # === Page Setting ===
 st.set_page_config(page_title="名刺交換分析", layout="wide")
 st.title("📇 Circuit Business Card Analytics Dashboard")
@@ -22,18 +20,16 @@ def load_card_data():
     res = requests.get(API_URL, headers=HEADERS)
     if res.status_code == 200:
         return pd.DataFrame(res.json())
-    else:
-        st.error("❌ Failed to load card data.")
-        return pd.DataFrame()
+    st.error("❌ Failed to load card data.")
+    return pd.DataFrame()
 
 @st.cache_data(show_spinner=True)
 def load_similar_users():
     res = requests.get(SIMILAR_URL, headers=HEADERS)
     if res.status_code == 200:
         return pd.DataFrame(res.json())
-    else:
-        st.warning("Couldn't load similar users data.")
-        return pd.DataFrame()
+    st.warning("Couldn't load similar users data.")
+    return pd.DataFrame()
 
 # @st.cache_data(show_spinner=False)
 # def get_company_info(company_id):
@@ -139,7 +135,6 @@ with tab3:
 
     import networkx as nx
     from pyvis.network import Network
-    import streamlit.components.v1 as components
 
 
     if "cards_df" not in st.session_state:
@@ -147,7 +142,7 @@ with tab3:
 
     name_map = dict(zip(
     st.session_state.cards_df["user_id"].astype(str),
-    st.session_state.cards_df["full_name"]
+    st.session_state.cards_df["full_name"], strict=False
 ))
 
     G = nx.DiGraph()
@@ -160,6 +155,5 @@ with tab3:
     net.from_nx(G)
     net.repulsion(node_distance=150, central_gravity=0.2)
 
-
     net.save_graph("contact_network.html")
-    components.html(open("contact_network.html", "r", encoding="utf-8").read(), height=750)
+    components.html(open("contact_network.html",  encoding="utf-8").read(), height=750)
