@@ -1,8 +1,7 @@
-import requests
-import numpy as np
 import pandas as pd
-import streamlit as st
 import plotly.express as px
+import requests
+import streamlit as st
 
 
 # circuitAPI
@@ -27,7 +26,7 @@ company_names = []
 phone_numbers = []
 similarlity_scores = []
 for i in range(len(top10_json)):
-    res = requests.get(GeospatialUrl + top10_json[i]["address"])
+    res = requests.get(GeospatialUrl + top10_json[i]["address"], timeout=(3, 10))
     # 緯度経度を取得
     lon, lat = res.json()[0]["geometry"]["coordinates"]
     lons.append(lon)
@@ -35,7 +34,7 @@ for i in range(len(top10_json)):
     names.append(top10_json[i]["full_name"])
     company_names.append(top10_json[i]["company_name"])
     phone_numbers.append(top10_json[i]["phone_number"])
-    similarlity_scores.append((top10_json[i]["similarity"]))
+    similarlity_scores.append(top10_json[i]["similarity"])
 
 size = similarlity_scores
 # Normalize the similarity scores to a range of 0 to 1
@@ -44,7 +43,7 @@ max_score = max(size)
 normalized_scores = [(score - min_score) / (max_score - min_score) for score in size]
 
 
-df = pd.DataFrame(
+similar_user_df = pd.DataFrame(
     {
         "lat": lats,
         "lon": lons,
@@ -56,7 +55,7 @@ df = pd.DataFrame(
 )
 
 fig = px.scatter_map(
-    df,
+    similar_user_df,
     lat="lat",
     lon="lon",
     hover_data=[
