@@ -1,7 +1,6 @@
 import requests
 import streamlit as st
 
-# タイトル
 API_URL = "https://circuit-trial.stg.rd.ds.sansan.com/api/"
 
 user_id = st.number_input("ユーザーIDを入力してください", min_value=0, max_value=10**10, value=0, step=1)
