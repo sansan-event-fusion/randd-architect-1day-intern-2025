@@ -64,11 +64,10 @@ for i in range(len(top10_json)):
     phone_numbers.append(top10_json[i]["phone_number"])
     similarlity_scores.append(top10_json[i]["similarity"])
 
-size = similarlity_scores
 # Normalize the similarity scores to a range of 0 to 1
-min_score = min(size)
-max_score = max(size)
-normalized_scores = [(score - min_score) / (max_score - min_score) for score in size]
+min_score = min(similarlity_scores)
+max_score = max(similarlity_scores)
+normalized_scores = [(score - min_score) / (max_score - min_score) for score in similarlity_scores]
 normalized_scores = np.exp(normalized_scores)  # Apply exponential scaling
 
 
