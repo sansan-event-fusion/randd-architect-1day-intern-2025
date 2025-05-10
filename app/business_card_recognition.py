@@ -314,3 +314,29 @@ def process_business_card(file_bytes: bytes, file_type: str) -> Dict[str, str]:
             "phone": "",
             "fax": "",
         }
+
+
+def main():
+    st.title("名刺情報抽出")
+
+    uploaded_file = st.file_uploader("名刺画像をアップロード", type=["jpg", "jpeg", "png"])
+
+    if uploaded_file is not None:
+        file_bytes = uploaded_file.read()
+        file_type = uploaded_file.type
+
+        info = process_business_card(file_bytes, file_type)
+
+        st.subheader("抽出された情報")
+        st.write("名前:", info["name"])
+        st.write("会社名:", info["company"])
+        st.write("部署:", info["department"])
+        st.write("役職:", info["title"])
+        st.write("住所:", info["address"])
+        st.write("電話番号:", info["phone"])
+        st.write("メールアドレス:", info["email"])
+        st.write("FAX:", info["fax"])
+
+
+if __name__ == "__main__":
+    main()
