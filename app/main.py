@@ -15,14 +15,23 @@ load_dotenv(Path(__file__).parent.parent / ".env")
 _geolocator = Nominatim(user_agent="sample_app", timeout=10)
 _geocode = RateLimiter(
     _geolocator.geocode,
-    min_delay_seconds=1.1, # Nominatim ポリシー準拠
-    max_retries=3, # タイムアウト時に自動リトライ
-    error_wait_seconds=2.0 # 失敗時の待機
+    min_delay_seconds=1.1,  # Nominatim ポリシー準拠
+    max_retries=3,  # タイムアウト時に自動リトライ
+    error_wait_seconds=2.0,  # 失敗時の待機
 )
 
-CARDS_USER_API_URL = os.getenv("CARDS_USER_API_URL", default="https://circuit-trial.stg.rd.ds.sansan.com/api/cards/{user_id}")
-CONTACTS_API_URL = os.getenv("CONTACTS_API_URL", default="https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/")
-CONTACTS_OWNER_COMPANY_API_URL = os.getenv("CONTACTS_OWNER_COMPANY_API_URL", default="https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/owner_companies/{owner_company_id}")
+CARDS_USER_API_URL = os.getenv(
+    "CARDS_USER_API_URL",
+    default="https://circuit-trial.stg.rd.ds.sansan.com/api/cards/{user_id}"
+)
+CONTACTS_API_URL = os.getenv(
+    "CONTACTS_API_URL", 
+    default="https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/"
+)
+CONTACTS_OWNER_COMPANY_API_URL = os.getenv(
+    "CONTACTS_OWNER_COMPANY_API_URL",
+    default="https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/owner_companies/{owner_company_id}"
+)
 
 if not CONTACTS_API_URL or not CONTACTS_OWNER_COMPANY_API_URL or not CARDS_USER_API_URL:
     st.write("環境変数が設定されていません。")
@@ -56,7 +65,7 @@ if owner_contacts_res.status_code != 200:
 owner_contacts = owner_contacts_res.json()
 
 # 3. 取引相手user_idを取得
-user_ids = set(c.get("user_id") for c in owner_contacts if c.get("user_id"))
+user_ids = {c.get("user_id") for c in owner_contacts if c.get("user_id")}
 
 # 4. user_idでcardsからaddressを取得
 def geocode_address(address: str) -> tuple[float | None, float | None]:
@@ -71,13 +80,13 @@ def geocode_address(address: str) -> tuple[float | None, float | None]:
         location = _geocode(normalized)
         if location is not None:
             return float(location.latitude), float(location.longitude)
-    except Exception as e: # geopy の GeocoderTimedOut など
+    except Exception as e:  # geopy の GeocoderTimedOut など  # noqa: BLE001
         st.write(f"[Geocoding] エラー: {e}")
     return None, None
 
 addresses = []
-user_id_list = list(user_ids) # set → list に変換
-sample_user_ids = user_id_list[:30] # 先頭30件をサンプルとして取得
+user_id_list = list(user_ids)  # set → list に変換
+sample_user_ids = user_id_list[:30]  # 先頭30件をサンプルとして取得
 for user_id in sample_user_ids:
     if not user_id:
         continue
@@ -106,24 +115,26 @@ st.write(f"取得した住所数: {len(addresses)}")
 
 # 5. addressのヒートマップを表示
 if addresses:
-    st.pydeck_chart(pdk.Deck(
-        map_style="mapbox://styles/mapbox/light-v9",
-        initial_view_state=pdk.ViewState(
-            latitude=sum(a["lat"] for a in addresses) / len(addresses),
-            longitude=sum(a["lon"] for a in addresses) / len(addresses),
-            zoom=5,
-            pitch=50,
-        ),
-        layers=[
-            pdk.Layer(
-                "HeatmapLayer",
-                data=addresses,
-                get_position="[lon, lat]",
-                aggregation="MEAN",
-                opacity=0.9,
+    st.pydeck_chart(
+        pdk.Deck(
+            map_style="mapbox://styles/mapbox/light-v9",
+            initial_view_state=pdk.ViewState(
+                latitude=sum(a["lat"] for a in addresses) / len(addresses),
+                longitude=sum(a["lon"] for a in addresses) / len(addresses),
+                zoom=5,
+                pitch=50,
             ),
-        ],
-    ))
+            layers=[
+                pdk.Layer(
+                    "HeatmapLayer",
+                    data=addresses,
+                    get_position="[lon, lat]",
+                    aggregation="MEAN",
+                    opacity=0.9,
+                ),
+            ],
+        )
+    )
 else:
     st.write("ヒートマップ表示用の住所データがありません")
 
