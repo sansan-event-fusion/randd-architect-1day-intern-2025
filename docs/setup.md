@@ -1,6 +1,23 @@
 # （事前準備）1dayインターン環境構築
 
-# poetry関連
+- [（事前準備）1dayインターン環境構築](#事前準備1dayインターン環境構築)
+- [Python 関連](#python-関連)
+  - [Linux, MacOS, WSL 環境向け](#linux-macos-wsl-環境向け)
+    - [pyenvのインストール](#pyenvのインストール)
+    - [poetryのインストール](#poetryのインストール)
+  - [Windows環境向け（Powershell）](#windows環境向けpowershell)
+    - [pyenvのインストール](#pyenvのインストール-1)
+    - [poetry のインストール、初期設定](#poetry-のインストール初期設定)
+- [VScode](#vscode)
+- [動かしてみる](#動かしてみる)
+  - [Poetry仮想環境の作成](#poetry仮想環境の作成)
+  - [Streamlitの実装](#streamlitの実装)
+  - [便利なStreamlitツールの紹介](#便利なstreamlitツールの紹介)
+    - [Plotly](#plotly)
+    - [streamlit\_agraph](#streamlit_agraph)
+
+
+# Python 関連
 
 自分の環境にgitがない場合は各自インストールしておいてください。
 
