@@ -32,9 +32,9 @@ def show_user_data(user_id):
     return None
 
 
-#show_card_data(show_user_data(18527820))
-#こんな感じで使う
-#IDに対してその人のデータを表示させるもの
+# show_card_data(show_user_data(18527820))
+# こんな感じで使う
+# IDに対してその人のデータを表示させるもの
 def show_card_data(user_data):
     st.text("ユーザー名: " + user_data[0]['full_name'])
     st.text("役職: " + user_data[0]['position'])
