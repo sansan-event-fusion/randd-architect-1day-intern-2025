@@ -80,8 +80,6 @@ st.plotly_chart(fig)
 top1 = top10.iloc[0]["user_id"]
 
 
-
-
 st.write("意欲的に交流を行っているユーザー Top 10")
 
 for i in range(11):
