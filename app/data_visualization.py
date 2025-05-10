@@ -13,9 +13,11 @@ def fetch_all_cards():
     offset = 0
     limit = 100
 
-    while True:  # テスト
+    while True:
         response = requests.get(
-            f"{BASE_URL}/cards/", params={"offset": offset, "limit": limit}, timeout=30  # タイムアウトを30秒に設定
+            f"{BASE_URL}/cards/",
+            params={"offset": offset, "limit": limit},
+            timeout=30,  # タイムアウトを30秒に設定
         )
         data = response.json()
         if not data:
@@ -36,7 +38,9 @@ def fetch_all_contacts():
 
     while True:
         response = requests.get(
-            f"{BASE_URL}/contacts/", params={"offset": offset, "limit": limit}, timeout=30  # タイムアウトを30秒に設定
+            f"{BASE_URL}/contacts/",
+            params={"offset": offset, "limit": limit},
+            timeout=30,  # タイムアウトを30秒に設定
         )
         data = response.json()
         if not data:
@@ -81,7 +85,11 @@ def main():
     # 役職の分布
     st.header("役職の分布")
     position_counts = cards_df["position"].value_counts().head(10)
-    fig = px.pie(values=position_counts.values, names=position_counts.index, title="Top 10 役職の分布")
+    fig = px.pie(
+        values=position_counts.values,
+        names=position_counts.index,
+        title="Top 10 役職の分布",
+    )
     st.plotly_chart(fig)
 
     # コンタクト履歴の時系列分析
