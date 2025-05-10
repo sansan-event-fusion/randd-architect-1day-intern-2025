@@ -9,7 +9,7 @@ from datatype import BusinessCard, ExchangeHistory
 from pyvis.network import Network
 
 # タイトル
-st.title("名刺リレーション表示アプリ")
+st.title("名刺リレーション表示アプリv0.0.2")
 
 api = BusinessCardAPI("https://circuit-trial.stg.rd.ds.sansan.com/api")
 
