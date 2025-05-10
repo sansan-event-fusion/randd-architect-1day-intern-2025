@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import networkx as nx
@@ -37,7 +37,7 @@ def card_display(card: BusinessCard):
 
 def history(u: int, v: int, date: datetime):
     # 文字列をdatetimeオブジェクトに変換
-    dt = datetime.strptime(date, "%Y-%m-%dT%H:%M:%SZ")  # noqa: DTZ007
+    dt = datetime.strptime(str(date), "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
 
     # "年月日 時間分"形式でフォーマット
     formatted_date = dt.strftime("%Y年%m月%d日 %H時%M分")
@@ -52,7 +52,7 @@ TO
 """
 
 
-def display_graph(name: str, nodes=None):  # noqa: C901 これはロジックを大きく変える必要が出るので対応不可能
+def display_graph(name: str, nodes=None):  # noqa: C901 これはロジックを大きく変える必要が出るので今回の時間では対応不可能
     key_toggle = f"show_graph_{name}"
 
     if name != "":
@@ -65,31 +65,31 @@ def display_graph(name: str, nodes=None):  # noqa: C901 これはロジックを
 
     if st.session_state[key_toggle]:
         # グラフ作成
-        G = nx.DiGraph()  # noqa: N806
+        gg = nx.Diggraph()
         if nodes is None:
             nodes = set()
 
         for i, card in enumerate(cards):
             if name == "" or card.user_id in se_top:
-                G.add_node(i, title=card_display(card), color="red")
+                gg.add_node(i, title=card_display(card), color="red")
                 nodes.add(i)
             if card.user_id == name:
-                G.add_node(i, title=card_display(card), color="yellow")
+                gg.add_node(i, title=card_display(card), color="yellow")
                 nodes.add(i)
 
         for contact in contacts:
             u = di.get(contact.owner_user_id)
             v = di.get(contact.user_id)
             if u in nodes or v in nodes:
-                G.add_node(u, title=card_display(card))
-                G.add_node(v, title=card_display(card))
-
-                G.add_edge(u, v, title=history(u, v, contact.created_at))
+                gg.add_node(u, title=card_display(card))
+                gg.add_node(v, title=card_display(card))
+                if u is not None and v is not None:
+                    gg.add_edge(u, v, title=history(u, v, contact.created_at))
 
         # Pyvisで描画
         net = Network(height="600px", width="100%", bgcolor="#222222", font_color="white")
         net.barnes_hut(gravity=-1, central_gravity=0, spring_length=200)
-        net.from_nx(G)
+        net.from_nx(gg)
         net.show_buttons(filter_=["physics"])
         net.save_graph(f"{name}.html")
 
