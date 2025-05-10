@@ -169,7 +169,7 @@ elif page == "営業活動履歴表示":
                         pref_summary = (
                             filtered_df["都道府県"]
                             .value_counts()
-                            .reset_index(name="件数")
+                            .reset_index(name="件数 ")
                             .rename(columns={"index": "都道府県"})
                         )
 
