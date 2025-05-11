@@ -1,0 +1,11 @@
+services:
+  &devcontainer sansan-randd-1day:
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile
+      target: dev
+      args:
+        - USER_NAME=${USER}
+    tty: true
+    volumes:
+      - ../:/randd-architect-1day-intern-2025
