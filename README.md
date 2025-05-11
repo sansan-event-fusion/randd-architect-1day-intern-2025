@@ -1,4 +1,4 @@
-# R&D Architect 1day Internship
+# R&D 1day Internship
 
 ## Run on local
 
