@@ -82,8 +82,8 @@ ENV PATH=${PYSETUP_PATH}/.venv/bin:$PATH \
 SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
 WORKDIR /app
 COPY --from=build ${PYSETUP_PATH}/.venv/ ${PYSETUP_PATH}/.venv/
-COPY src src
+COPY app/ app/
 COPY .streamlit/ .streamlit/
-RUN 1000
+USER 1000
 EXPOSE 8080
 CMD ["streamlit", "run", "app/main.py"]
