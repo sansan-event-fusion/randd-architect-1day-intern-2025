@@ -1,0 +1,119 @@
+{
+	"name": "Sansan R&D 1day internship",
+	"remoteUser": "${localEnv:USER}",
+	"updateRemoteUserUID": true,
+	"mounts": [
+		"source=${localEnv:HOME}/.gitconfig,target=/home/${localEnv:USER}/.gitconfig,type=bind,consistency=cached"
+	],
+	"features": {
+		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+		"ghcr.io/devcontainers/features/github-cli:1": {},
+		"ghcr.io/dhoeric/features/hadolint:1": {}
+	},
+	"init": true,
+	"shutdownAction": "stopCompose",
+	"dockerComposeFile": [
+		"../docker/compose.yaml"
+	],
+	"service": "sansan-randd-1day",
+	"runServices": [
+		"sansan-randd-1day"
+	],
+	"workspaceFolder": "/randd-architect-1day-intern-2025",
+	"updateContentCommand": "set -ex && poetry install",
+	"customizations": {
+		"vscode": {
+			"settings": {
+				// ファイル保存時に自動でフォーマット(末に空行挿入、末の空白削除)をかける
+				"files.insertFinalNewline": true,
+				"files.trimTrailingWhitespace": true,
+				// json ファイルを編集する際のフォーマッター設定
+				"[json][jsonc]": {
+					"editor.defaultFormatter": "vscode.json-language-features",
+					"editor.formatOnSave": true,
+					"editor.codeActionsOnSave": {
+						"source.organizeImports": "explicit",
+						"source.fixAll": "explicit"
+					}
+				},
+				// python ファイル編集時の設定
+				"[python]": {
+					"editor.defaultFormatter": "charliermarsh.ruff",
+					"editor.formatOnSave": true,
+					"editor.codeActionsOnSave": {
+						// explicit と formatOnSave により自動フォーマットされる
+						"source.organizeImports": "explicit",
+						"source.fixAll": "explicit"
+					}
+				},
+				// python のテスト設定　
+				"python.testing.unittestEnabled": false,
+				"python.testing.pytestEnabled": true,
+				"python.testing.pytestArgs": [
+					"${workspaceFolder}/tests"
+				],
+				// linter/formatter の設定
+				"python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+				"python.terminal.activateEnvironment": false,
+				"mypy-type-checker.importStrategy": "fromEnvironment",
+				"mypy-type-checker.args": [
+					"--config-file=${workspaceFolder}/pyproject.toml"
+				],
+				"ruff.importStrategy": "fromEnvironment",
+				"ruff.configuration": "--config=${workspaceFolder}/pyproject.toml",
+				// 色設定(プロジェクトをわかりやすくするため)
+				"workbench.colorCustomizations": {
+					// サイドバーの設定
+					"activityBar.activeBackground": "#ffea90",
+					"activityBar.background": "#ffea90",
+					"activityBar.foreground": "#15202b",
+					"activityBar.inactiveForeground": "#15202b99",
+					"activityBarBadge.background": "#009f81",
+					"activityBarBadge.foreground": "#e7e7e7",
+					// 上下の設定
+					"commandCenter.border": "#e7e7e799",
+					"sash.hoverBorder": "#2c5d85",
+					"statusBar.background": "#1f425f",
+					"statusBar.foreground": "#e7e7e7",
+					"statusBarItem.hoverBackground": "#2c5d85",
+					"statusBarItem.remoteBackground": "#1f425f",
+					"statusBarItem.remoteForeground": "#e7e7e7",
+					"titleBar.activeBackground": "#1f425f",
+					"titleBar.activeForeground": "#e7e7e7",
+					"titleBar.inactiveBackground": "#1f425f99",
+					"titleBar.inactiveForeground": "#e7e7e799"
+				},
+				// hadolint の設定
+				"hadolint.cliOptions": [
+					"--ignore",
+					"DL3008" // apt-get 時にバージョン指定を求めるルール
+				],
+				// これを設定しないと拡張がインストールされないことがあった (https://github.com/microsoft/vscode-remote-release/issues/9616)
+				"extensions.verifySignature": false
+			},
+			"extensions": [
+				"charliermarsh.ruff",
+				"donjayamanne.githistory",
+				"eamodio.gitlens",
+				"exiasr.hadolint",
+				"GitHub.vscode-github-actions",
+				"github.copilot",
+				"leodevbro.blockman",
+				"mhutchie.git-graph",
+				"ms-azuretools.vscode-docker",
+				"ms-python.debugpy",
+				"ms-python.mypy-type-checker",
+				"ms-python.python",
+				"ms-python.vscode-pylance",
+				"oderwat.indent-rainbow",
+				"saoudrizwan.claude-dev",
+				"shd101wyy.markdown-preview-enhanced",
+				"tamasfe.even-better-toml",
+				"tomoki1207.pdf",
+				"vscode-icons-team.vscode-icons",
+				"waderyan.gitblame",
+				"yzhang.markdown-all-in-one"
+			]
+		}
+	}
+}
