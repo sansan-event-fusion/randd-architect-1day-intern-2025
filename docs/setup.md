@@ -423,7 +423,7 @@ $ poetry run streamlit run display_table.py
 
 `http://localhost:8080`に接続し、以下のような画面が出ると成功です。
 
-![スクリーンショット 2024-05-17 12.07.45.png](%EF%BC%88%E4%BA%8B%E5%89%8D%E6%BA%96%E5%82%99%EF%BC%891day%E3%82%A4%E3%83%B3%E3%82%BF%E3%83%BC%E3%83%B3%E7%92%B0%E5%A2%83%E6%A7%8B%E7%AF%89%2064891fd6cb214b858199cdabd6dcd3f9/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_2024-05-17_12.07.45.png)
+![アプリのサンプル](figures/app_sample.png)
 
 ## 便利なStreamlitツールの紹介
 
@@ -467,7 +467,7 @@ if st.button("グラフを作成"):
 
 `graph_objectsのFigure()`でfigureが初期化されます。`fig.add_trace()`で描画したいグラフの情報を入力します。ここで複数のグラフを追加することもできます。`fig.update_layout`で図全体のレイアウトを設定（上書き）することができます。最後に、`st.plotly_chart(fig)`で仮面上にグラフが描画されます。
 
-![スクリーンショット 2024-05-17 18.08.14.png](%EF%BC%88%E4%BA%8B%E5%89%8D%E6%BA%96%E5%82%99%EF%BC%891day%E3%82%A4%E3%83%B3%E3%82%BF%E3%83%BC%E3%83%B3%E7%92%B0%E5%A2%83%E6%A7%8B%E7%AF%89%2064891fd6cb214b858199cdabd6dcd3f9/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_2024-05-17_18.08.14.png)
+![ploty による描画サンプル](figures/ploty_chart_sample.png)
 
 ### streamlit_agraph
 
@@ -511,4 +511,4 @@ agraph(nodes, edges, config)
 
 このように、ノードリスト(nodes)、エッジリスト(edges)、描画設定(config)を定義すれば簡単にネットワークを描画できます（[参考](https://github.com/ChrisDelClea/streamlit-agraph)）。
 
-![スクリーンショット 2024-05-27 19.25.24.png](%EF%BC%88%E4%BA%8B%E5%89%8D%E6%BA%96%E5%82%99%EF%BC%891day%E3%82%A4%E3%83%B3%E3%82%BF%E3%83%BC%E3%83%B3%E7%92%B0%E5%A2%83%E6%A7%8B%E7%AF%89%2064891fd6cb214b858199cdabd6dcd3f9/%25E3%2582%25B9%25E3%2582%25AF%25E3%2583%25AA%25E3%2583%25BC%25E3%2583%25B3%25E3%2582%25B7%25E3%2583%25A7%25E3%2583%2583%25E3%2583%2588_2024-05-27_19.25.24.png)
+![ネットワークのサンプル](figures/network_sample.png)
