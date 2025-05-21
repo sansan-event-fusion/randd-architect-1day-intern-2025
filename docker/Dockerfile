@@ -26,40 +26,6 @@ RUN apt-get update \
 RUN curl -sSL https://install.python-poetry.org | python3 -
 
 #############################################
-# 開発環境
-# devcontainer でアタッチするコンテナ用のイメージ
-#############################################
-FROM base AS dev
-ARG USER_NAME=vscode
-ARG USER_UID=1000
-ARG USER_GID=1000
-ENV PYTHONPATH="src"
-SHELL ["/bin/bash", "-eo", "pipefail", "-c"]
-# apt で install したいパッケージがあったらここに追加
-RUN apt-get update \
-    && apt-get install --no-install-recommends -y \
-        htop \
-        jq \
-        less \
-        sudo \
-        tmux \
-        tree \
-        vim \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
-# ユーザーとグループを作成し、デフォルトシェルを bash に設定
-RUN if getent group ${USER_GID} > /dev/null 2>&1; then \
-        echo "Group with GID ${USER_GID} already exists. Skipping group creation."; \
-    else \
-        groupadd --gid "${USER_GID}" "${USER_NAME}"; \
-    fi \
-    && useradd --uid "${USER_UID}" --gid "${USER_GID}" -m "${USER_NAME}" -s /bin/bash \
-    # sudo グループにユーザーを追加
-    && usermod -aG sudo "${USER_NAME}" \
-    && echo "${USER_NAME} ALL=(ALL) NOPASSWD:ALL" > "/etc/sudoers.d/${USER_NAME}" \
-    && chmod 0440 "/etc/sudoers.d/${USER_NAME}"
-
-#############################################
 # build 用ステージ
 # プロジェクトのビルドをするためのイメージ
 #############################################
