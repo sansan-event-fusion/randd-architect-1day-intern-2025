@@ -1,25 +1,18 @@
 {
 	"name": "Sansan R&D 1day internship",
-	"remoteUser": "${localEnv:USER}",
 	"updateRemoteUserUID": true,
 	"mounts": [
 		"source=${localEnv:HOME}/.gitconfig,target=/home/${localEnv:USER}/.gitconfig,type=bind,consistency=cached"
 	],
 	"features": {
+		"ghcr.io/devcontainers-extra/features/poetry:2": {
+			"version": "latest"
+		},
 		"ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
-		"ghcr.io/devcontainers/features/github-cli:1": {},
 		"ghcr.io/dhoeric/features/hadolint:1": {}
 	},
 	"init": true,
-	"shutdownAction": "stopCompose",
-	"dockerComposeFile": [
-		"../docker/compose.yaml"
-	],
-	"service": "sansan-randd-1day",
-	"runServices": [
-		"sansan-randd-1day"
-	],
-	"workspaceFolder": "/randd-architect-1day-intern-2025",
+	"image": "mcr.microsoft.com/vscode/devcontainers/python:3.13",
 	"updateContentCommand": "set -ex && poetry install",
 	"customizations": {
 		"vscode": {
