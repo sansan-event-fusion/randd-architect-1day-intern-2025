@@ -52,9 +52,6 @@ ENV PATH=${PYSETUP_PATH}/.venv/bin:$PATH \
     PYTHONDONTWRITEBYTECODE=1
 WORKDIR /app
 COPY --from=build ${PYSETUP_PATH}/ ${PYSETUP_PATH}/
-COPY --from=build /lib/x86_64-linux-gnu/libgcc_s.so.1 /usr/lib/x86_64-linux-gnu/
-COPY --from=build /lib/x86_64-linux-gnu/libstdc++.so.6 /usr/lib/x86_64-linux-gnu/
-COPY --from=build /lib/x86_64-linux-gnu/libz.so.1 /usr/lib/x86_64-linux-gnu/
 COPY app/ app/
 COPY .streamlit/ .streamlit/
 EXPOSE 8080
