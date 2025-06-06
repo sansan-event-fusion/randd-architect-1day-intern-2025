@@ -86,9 +86,9 @@ uv add plotly
 ワークスペースの直下で、VScodeの設定ファイル`.vscode/settings.json`を作成します。
 
 ```python
-$ touch .vscode/settings.json  # Bash
+$ mkdir .vscode && touch .vscode/settings.json  # bash, zsh
 
-> New-Item .vscode/settings.json  # Powershell
+> New-Item .vscode/settings.json -ItemType File -Force  # Powershell
 ```
 
 ファイルの中身を以下のようにします。
@@ -238,9 +238,9 @@ R&Dでは実際に [Sansan Labs](https://sin.sansan.com/best_practice/sansan-la
 Streamlitを実行するために、設定ファイル`config.toml`を作成します。
 
 ```bash
-$ touch .streamlit/config.toml  # Bash
+$ mkdir .streamlit && touch .streamlit/config.toml  # bash, zsh
 
-> New-Item .streamlit/config.toml  # Powershell
+> New-Item .streamlit/config.toml -ItemType File -Force  # Powershell
 ```
 
 中身の設定値は以下のように設定してください。
@@ -280,9 +280,9 @@ textColor="#002060"
 pythonファイルを作成します。
 
 ```bash
-$ touch display_table.py  # Bash
+$ touch example1.py  # bash, zsh
 
-> New-Item display_table.py  # Powershell
+> New-Item example1.py  # Powershell
 ```
 
 中身は以下の通りです。
@@ -321,7 +321,7 @@ st.dataframe(dummy_data)
 それでは、手元で実行してみましょう。
 
 ```bash
-$ uv run streamlit run display_table.py
+$ uv run streamlit run example1.py
 ```
 
 `http://localhost:8080`に接続し、以下のような画面が出ると成功です。
@@ -333,6 +333,14 @@ $ uv run streamlit run display_table.py
 ### Plotly
 
 グラフや図を簡潔に描画できるライブラリ（[参考](https://plotly.com/python/)）。
+
+まずはファイルを作成
+
+```bash
+$ touch example2.py  # bash, zsh
+
+> New-Item example2.py   # Powershell
+```
 
 以下のサンプルコードを実行し、UI上のボタンを押すと、折れ線グラフが描画されます。
 (実行には、`plotly` のインストールが必要なので、`uv add` コマンドを実行してインストールした上で実行してみましょう！)
@@ -369,6 +377,12 @@ if st.button("グラフを作成"):
     display_plot(xx, yy)
 ```
 
+実行
+
+```bash
+uv run example2.py
+```
+
 `if st.button()` 以下に、ボタンが押されたときの処理を書きます。
 
 `graph_objectsのFigure()`でfigureが初期化されます。`fig.add_trace()`で描画したいグラフの情報を入力します。ここで複数のグラフを追加することもできます。`fig.update_layout`で図全体のレイアウトを設定（上書き）することができます。最後に、`st.plotly_chart(fig)`で仮面上にグラフが描画されます。
@@ -378,6 +392,14 @@ if st.button("グラフを作成"):
 ### streamlit_agraph
 
 グラフ（ネットワーク）を描画できるライブラリ（[参考](https://github.com/ChrisDelClea/streamlit-agraph)）。
+
+まずはファイルを作成
+
+```bash
+$ touch example3.py  # bash, zsh
+
+> New-Item example3.py   # Powershell
+```
 
 以下のサンプルコードを実行してみると、画面上にネットワークが表示されます。
 (このコードの実行には `plotly` は不要なので、`uv remove plotly` を実行してライブラリをアンインストールしてみましょう!)
@@ -413,6 +435,12 @@ config = Config(
 
 # 描画
 agraph(nodes, edges, config)
+```
+
+実行
+
+```bash
+uv run example3.py
 ```
 
 このように、ノードリスト(nodes)、エッジリスト(edges)、描画設定(config)を定義すれば簡単にネットワークを描画できます（[参考](https://github.com/ChrisDelClea/streamlit-agraph)）。
