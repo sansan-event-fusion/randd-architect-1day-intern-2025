@@ -22,20 +22,27 @@ git version 2.49.0
 ```
 
 ## uv のインストール
-
-Linux, MacOS, WSL 向けのインストール方法
 下記のコマンドを実行してください。
 ```bash
+# Linux, MacOS, WSL 向け
 curl -LsSf https://astral.sh/uv/install.sh | sh
-```
 
-<details><summary>Windows (PowerShell) 向けインストール手順</summary>
-
-irm を使ってインストールします。下記のコマンドを実行してください。
-```powershell
+# Windows (Powershell) 向け
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
-</details>
+
+これらのインストール方法でインストールした場合は、ホームディレクトリ配下の `.local/bin` にインストールされるので PATH を通しておいてください。
+
+```bash
+# for zsh
+grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.zshrc || echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
+
+# for bash
+grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.bashrc || echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
+
+# for powershell
+[System.Environment]::SetEnvironmentVariable('PATH', $env:USERPROFILE + "\.local\bin;" + [System.Environment]::GetEnvironmentVariable('PATH', "User"), "User"); $env:Path = $env:USERPROFILE + "\.local\bin;" + $env:Path
+```
 
 その他のインストール方法を使いたい場合は[ドキュメント](https://docs.astral.sh/uv/getting-started/installation/)を参照してください。
 
