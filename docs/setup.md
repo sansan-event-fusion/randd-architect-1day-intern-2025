@@ -25,23 +25,23 @@ git version 2.49.0
 下記のコマンドを実行してください。
 ```bash
 # Linux, MacOS, WSL 向け
-curl -LsSf https://astral.sh/uv/install.sh | sh
+$ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Windows (Powershell) 向け
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+> powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
 これらのインストール方法でインストールした場合は、ホームディレクトリ配下の `.local/bin` にインストールされるので PATH を通しておいてください。
 
 ```bash
 # for zsh
-grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.zshrc || echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
+$ grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.zshrc || echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
 
 # for bash
-grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.bashrc || echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
+$ grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.bashrc || echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
 
 # for powershell
-[System.Environment]::SetEnvironmentVariable('PATH', $env:USERPROFILE + "\.local\bin;" + [System.Environment]::GetEnvironmentVariable('PATH', "User"), "User"); $env:Path = $env:USERPROFILE + "\.local\bin;" + $env:Path
+> [System.Environment]::SetEnvironmentVariable('PATH', $env:USERPROFILE + "\.local\bin;" + [System.Environment]::GetEnvironmentVariable('PATH', "User"), "User"); $env:Path = $env:USERPROFILE + "\.local\bin;" + $env:Path
 ```
 
 その他のインストール方法を使いたい場合は[ドキュメント](https://docs.astral.sh/uv/getting-started/installation/)を参照してください。
@@ -49,12 +49,12 @@ grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.bashrc || echo 'export PATH="$
 ## 試しに使ってみて実行確認
 
 ```bash
-uv init --project sample
+$ uv init --project sample
 
 # bash, zsh
-cd sample && uv run main.py
+$ cd sample && uv run main.py
 # Windows (PowerShell)
-cd sample; uv run main.py
+> cd sample; uv run main.py
 ```
 
 以下のように Python が実行されていれば OK です。
@@ -65,7 +65,7 @@ Hello from sample!
 
 パッケージを追加したい場合は `uv add` を実行してください。
 ```bash
-uv add plotly
+$ uv add plotly
 ```
 実行することで、`pyproject.toml` 及び `uv.lock` が更新されてパッケージに関しての情報が保存されます。
 
@@ -81,7 +81,7 @@ uv add plotly
 
 ワークスペースの直下で、VScodeの設定ファイル`.vscode/settings.json`を作成します。
 
-```python
+```bash
 $ mkdir .vscode && touch .vscode/settings.json  # bash, zsh
 
 > New-Item .vscode/settings.json -ItemType File -Force  # Powershell
@@ -214,7 +214,7 @@ $ uv run python
 
 ライブラリを追加したい場合は
 
-```python
+```bash
 $ uv add <ライブラリ名>
 
 # 開発用パッケージの場合は
@@ -376,7 +376,7 @@ if st.button("グラフを作成"):
 実行
 
 ```bash
-uv run example2.py
+$ uv run example2.py
 ```
 
 `if st.button()` 以下に、ボタンが押されたときの処理を書きます。
@@ -436,7 +436,7 @@ agraph(nodes, edges, config)
 実行
 
 ```bash
-uv run example3.py
+$ uv run example3.py
 ```
 
 このように、ノードリスト(nodes)、エッジリスト(edges)、描画設定(config)を定義すれば簡単にネットワークを描画できます（[参考](https://github.com/ChrisDelClea/streamlit-agraph)）。
