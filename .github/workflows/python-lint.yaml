@@ -11,20 +11,25 @@ permissions:
 
 jobs:
   ruff-lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Linter
-        uses: ./.github/actions/setup-linter
+      - name: Set up Reviewdog
+        uses: reviewdog/action-setup@e04ffabe3898a0af8d0fb1af00c188831c4b5893 # v1.3.2
+        with:
+          reviewdog_version: latest
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@f0ec1fc3b38f5e7cd731bb6ce540c5af426746bb # v6.1.0
 
       - name: lint check
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          poetry run ruff check . | reviewdog \
+          uv run ruff check . | reviewdog \
             -f=flake8 \
             -name="ruff(lint)" \
             -reporter=github-pr-review \
@@ -33,20 +38,25 @@ jobs:
             -level=warning
 
   ruff-check-diff:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Linter
-        uses: ./.github/actions/setup-linter
+      - name: Set up Reviewdog
+        uses: reviewdog/action-setup@e04ffabe3898a0af8d0fb1af00c188831c4b5893 # v1.3.2
+        with:
+          reviewdog_version: latest
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@f0ec1fc3b38f5e7cd731bb6ce540c5af426746bb # v6.1.0
 
       - name: ruff check diff
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          poetry run ruff check --diff . | reviewdog \
+          uv run ruff check --diff . | reviewdog \
             -f=diff \
             -f.diff.strip=0 \
             -name="ruff(diff)" \
@@ -56,20 +66,25 @@ jobs:
             -level=warning
 
   ruff-format-diff:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Linter
-        uses: ./.github/actions/setup-linter
+      - name: Set up Reviewdog
+        uses: reviewdog/action-setup@e04ffabe3898a0af8d0fb1af00c188831c4b5893 # v1.3.2
+        with:
+          reviewdog_version: latest
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@f0ec1fc3b38f5e7cd731bb6ce540c5af426746bb # v6.1.0
 
       - name: ruff format diff
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          poetry run ruff format --diff --check . 2>&1 | reviewdog \
+          uv run ruff format --diff --check . 2>&1 | reviewdog \
             -f=diff \
             -f.diff.strip=0 \
             -name="ruff format" \
@@ -79,20 +94,25 @@ jobs:
             -level=warning
 
   mypy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Linter
-        uses: ./.github/actions/setup-linter
+      - name: Set up Reviewdog
+        uses: reviewdog/action-setup@e04ffabe3898a0af8d0fb1af00c188831c4b5893 # v1.3.2
+        with:
+          reviewdog_version: latest
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@f0ec1fc3b38f5e7cd731bb6ce540c5af426746bb # v6.1.0
 
       - name: mypy
         env:
           REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          poetry run mypy . --ignore-missing-imports \
+          uv run mypy . --ignore-missing-imports \
             | reviewdog -f="mypy" \
             -name="mypy" \
             -reporter="github-pr-review" \

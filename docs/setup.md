@@ -1,178 +1,73 @@
 # （事前準備）1dayインターン環境構築
 
 - [（事前準備）1dayインターン環境構築](#事前準備1dayインターン環境構築)
-- [Python 関連](#python-関連)
-  - [Linux, MacOS, WSL 環境向け](#linux-macos-wsl-環境向け)
-    - [pyenvのインストール](#pyenvのインストール)
-    - [poetryのインストール](#poetryのインストール)
-  - [Windows環境向け（Powershell）](#windows環境向けpowershell)
-    - [pyenvのインストール](#pyenvのインストール-1)
-    - [poetry のインストール、初期設定](#poetry-のインストール初期設定)
+- [Python 関連の環境構築](#python-関連の環境構築)
+  - [uv のインストール](#uv-のインストール)
+  - [試しに使ってみて実行確認](#試しに使ってみて実行確認)
 - [VScode](#vscode)
 - [動かしてみる](#動かしてみる)
-  - [Poetry仮想環境の作成](#poetry仮想環境の作成)
+  - [仮想環境の作成](#仮想環境の作成)
   - [Streamlitの実装](#streamlitの実装)
   - [便利なStreamlitツールの紹介](#便利なstreamlitツールの紹介)
     - [Plotly](#plotly)
     - [streamlit\_agraph](#streamlit_agraph)
 
 
-# Python 関連
+# Python 関連の環境構築
+作業環境にgit がインストールされていない場合はインストールしておくこと。
+バージョンは違っていても構いません。
+```bash
+$ git --version
+git version 2.49.0
+```
 
-自分の環境にgitがない場合は各自インストールしておいてください。
+## uv のインストール
+下記のコマンドを実行してください。
+```bash
+# Linux, MacOS, WSL 向け
+$ curl -LsSf https://astral.sh/uv/install.sh | sh
 
-## Linux, MacOS, WSL 環境向け
+# Windows (Powershell) 向け
+> powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
 
-### pyenvのインストール
-
-pyenvが既にインストールされている場合は 5. から進めてください。
-
-1. GitHub からリポジトリを clone し、 `~/.pyenv` というパスでディレクトリを置く
+これらのインストール方法でインストールした場合は、ホームディレクトリ配下の `.local/bin` にインストールされるので PATH を通しておいてください。
 
 ```bash
-$ git clone git@github.com:pyenv/pyenv.git ~/.pyenv
-# https で GitHub に接続する場合
-$ git clone https://github.com/pyenv/pyenv.git ~/.pyenv
+# for zsh
+$ grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.zshrc || echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc && source ~/.zshrc
+
+# for bash
+$ grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.bashrc || echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc && source ~/.bashrc
+
+# for powershell
+> [System.Environment]::SetEnvironmentVariable('PATH', $env:USERPROFILE + "\.local\bin;" + [System.Environment]::GetEnvironmentVariable('PATH', "User"), "User"); $env:Path = $env:USERPROFILE + "\.local\bin;" + $env:Path
 ```
 
-(Option): 高速化するオプションを適用できる。失敗しても pyenv は正常に動作するので、とりあえず以下のコマンドを叩いておくと良い
+その他のインストール方法を使いたい場合は[ドキュメント](https://docs.astral.sh/uv/getting-started/installation/)を参照してください。
+
+## 試しに使ってみて実行確認
 
 ```bash
-$ cd ~/.pyenv && src/configure && make -C src && cd
+$ uv init --project sample
+
+# bash, zsh
+$ cd sample && uv run main.py
+# Windows (PowerShell)
+> cd sample; uv run main.py
 ```
 
-1. [https://github.com/pyenv/pyenv#set-up-your-shell-environment-for-pyenv](https://github.com/pyenv/pyenv#set-up-your-shell-environment-for-pyenv) の各 shell の方法に従って設定を追加していく。基本的に手順通りにコマンドを叩けば良い。Bash の場合まず、  `$~/.bashrc` に次のようにして設定を追加する。
-
+以下のように Python が実行されていれば OK です。
 ```bash
-$ echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
-$ echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
-$ echo 'eval "$(pyenv init -)"' >> ~/.bashrc
+Initialized project `sample`
+Hello from sample!
 ```
 
-1. `~/.profile`, `~/.bash_profile`, `~/.bash_login` が存在する場合、そこに次のようにして設定を追加する。無ければ `~/.profile` を作成して、追加する。
-    - (下記は `~/.profile` の場合なので、適宜 echo で流す先は変更すること)
-
+パッケージを追加したい場合は `uv add` を実行してください。
 ```bash
-$ echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.profile
-$ echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.profile
-$ echo 'eval "$(pyenv init -)"' >> ~/.profile
+$ uv add plotly
 ```
-
-1. shell をリセットして反映させる
-
-```bash
-$ exec $SHELL  # restart
-$ pyenv --version  # check your pyenv command
-```
-
-### poetryのインストール
-
-1.  以下のversionのpythonをインストール
-
-```bash
-$ pyenv install 3.10.11
-$ pyenv global 3.10.11
-```
-
-1. pipxをインストール
-
-```bash
-$ pip install pipx
-```
-
-1. pipx で入れたツールを利用するために `PATH` に保存先を追加する (以下は `~/.bashrc` に設定を保存しておく場合)
-
-```bash
-$ echo 'export PATH=${HOME}/.local/bin:$PATH' >> ~/.bashrc
-$ exec $SHELL
-```
-
-1. pipx でpoetryをインストール
-
-```bash
-$ pipx install poetry
-```
-
-※ kerying 周りでエラーが出ることがあるため、以下のコマンドを叩いておくことを推奨する (Bash の場合)
-
-```bash
-$ echo 'export PYTHON_KEYRING_BACKEND=keyring.backends.null.Keyring' >> ~/.bashrc
-$ exec $SHELL
-```
-
-1. poetryの仮想環境をプロジェクトディレクトリ以下に置くようにする
-
-```bash
-$ poetry config virtualenvs.in-project true
-```
-
-## Windows環境向け（Powershell）
-
-### pyenvのインストール
-
-pyenvが既にインストールされている場合は 5. から進めてください。
-
-1. Githubからリポジトリをcloneし、`$HOME\.pyenv`というパスでディレクトリを置く
-
-```powershell
-> git clone git@github.com:pyenv/pyenv.git "$HOME\.pyenv"
-# https で GitHub に接続する場合
-> git clone https://github.com/pyenv-win/pyenv-win.git "$HOME\.pyenv"
-```
-
-1. 環境変数を設定
-
-```powershell
-> [System.Environment]::SetEnvironmentVariable('PYENV',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
-> [System.Environment]::SetEnvironmentVariable('PYENV_ROOT',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
-> [System.Environment]::SetEnvironmentVariable('PYENV_HOME',$env:USERPROFILE + "\.pyenv\pyenv-win\","User")
-```
-
-1. 環境変数パスを設定
-
-```powershell
-> [System.Environment]::SetEnvironmentVariable('PATH', $env:USERPROFILE + "\.pyenv\pyenv-win\bin;" + $env:USERPROFILE + "\.pyenv\pyenv-win\shims;" + [System.Environment]::GetEnvironmentVariable('PATH', "User"),"User")
-```
-
-1. powershellを再起動し、以下のコマンドを試す
-
-```powershell
-> pyenv --version
-```
-
-`スクリプトの実行が無効になっている`というエラーが出る場合、以下のコマンドを実行し、再度試してみてください
-
-```powershell
-> Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
-```
-
-### poetry のインストール、初期設定
-
-1. 以下のversionのpythonをインストール
-
-```powershell
-> pyenv install 3.10.11
-> pyenv global 3.10.11 # global設定にしたくない方は、プロジェクトのディレクトリに移動後にpyenv localを実行
-```
-
-1. pipxをインストール
-
-```powershell
-> python -m pip install --user pipx
-> python -m pipx ensurepath
-```
-
-1. poetryをインストール
-
-```powershell
-> python -m pipx poetry
-```
-
-1. poetryの仮想環境をプロジェクトディレクトリ以下に置くようにする
-
-```powershell
-> poetry config virtualenvs.in-project true
-```
+実行することで、`pyproject.toml` 及び `uv.lock` が更新されてパッケージに関しての情報が保存されます。
 
 # VScode
 
@@ -186,10 +81,10 @@ pyenvが既にインストールされている場合は 5. から進めてく�
 
 ワークスペースの直下で、VScodeの設定ファイル`.vscode/settings.json`を作成します。
 
-```python
-$ touch .vscode/settings.json  # Bash
+```bash
+$ mkdir .vscode && touch .vscode/settings.json  # bash, zsh
 
-> New-Item .vscode/settings.json  # Powershell
+> New-Item .vscode/settings.json -ItemType File -Force  # Powershell
 ```
 
 ファイルの中身を以下のようにします。
@@ -222,11 +117,11 @@ $ touch .vscode/settings.json  # Bash
 
 # 動かしてみる
 
-## Poetry仮想環境の作成
+## 仮想環境の作成
 
 引き続き、先ほど作成したワークスペース内で作業します。
 
-poetry仮想環境を作成するために、pyproject.tomlを作成します。
+仮想環境を作成するために、pyproject.tomlを作成します。
 
 ```bash
 $ touch pyproject.toml  # Bash
@@ -236,29 +131,25 @@ $ touch pyproject.toml  # Bash
 
 中身には以下をコピーしてください。
 
-```python
-[tool.poetry]
-name = "1-day-internship-app"
+```toml
+[project]
+name = "app"
 version = "0.1.0"
 description = "1day intern app"
-authors = ["Sansan, Inc."]
-license = "Proprietary"
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "streamlit>=1.43.2",
+    "streamlit-agraph>=0.0.45",
+    "requests>=2.32.3",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<3.11"
-streamlit = "1.33.0"
-streamlit-agraph = "0.0.45"
-requests = "^2.31.0"
-types-requests = "^2.31.0.20240406"
-
-[tool.poetry.group.dev.dependencies]
-mypy = "^1.9.0"
-pytest = "^8.1.1"
-ruff = "^0.3.7"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[dependency-groups]
+dev = [
+    "ruff>=0.11.2",
+    "mypy>=1.15.0",
+    "pytest>=8.3.5",
+    "types-requests>=2.32.0.20250306",
+]
 
 [tool.mypy]
 check_untyped_defs = true
@@ -270,28 +161,19 @@ warn_redundant_casts = true
 ignore_missing_imports = true
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py313"
 line-length = 120
-select = ["ALL"]
-ignore = [
-    # missing-trailing-comma
-    "COM812",
-    # ambiguous-variable-name
-    "E741",
-    #  single-line-implicit-string-concatenation
-    "ISC001",
-    # assert
-    "S101",
-    # suspicious-non-cryptographic-random-usage
-    "S311",
-    # unnecessary-assign
-    "RET504",
-    # magic-value-comparison
-    "PLR2004",
-    # pydocstyle
-    "D",
-    # flake8-annotations
-    "ANN",
+lint.select = ["ALL"]
+lint.ignore = [
+    "COM812",   # missing-trailing-comma
+    "E741",     # ambiguous-variable-name
+    "ISC001",   # single-line-implicit-string-concatenation
+    "S101",     # assert
+    "S311",     # suspicious-non-cryptographic-random-usage
+    "RET504",   # unnecessary-assign
+    "PLR2004",  # magic-value-comparison
+    "D",        # pydocstyle
+    "ANN",      # flake8-annotations
 ]
 exclude = [
     ".git",
@@ -303,41 +185,58 @@ exclude = [
     "__pycache__",
 ]
 
-[tool.ruff.mccabe]
-max-complexity = 5
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*" = [
+    "S101",     # assert
+    "PLR2004",  # magic-value-comparison
+    "INP001",   # input
+    "D"         # pydocstyle
+]
 
+[tool.ruff.lint.mccabe]
+max-complexity = 5
 ```
 
-`tool.poetry.dependencies`, `tool.poetry.group.dev.dependencies`にインストールしたいpythonライブラリとそのバージョンを記述します。
+`project.dependencies`, `dependency-groups.dev` にインストールしたいpythonライブラリとそのバージョンを記述します。
 
-`tool.poetry.group.dev.dependencies` には、テスト関連のライブラリなど、開発環境にのみインストールしたいライブラリを記述します。オプションなしのpoetry installコマンドですべてのライブラリをインストールします。.venvフォルダにpoetry仮想環境が作成されます。仮想環境内でコマンドを実行したい場合は、poetry run を先頭に書くことで実行できます。
+`dependency-groups.dev` には、テスト関連のライブラリなど、開発環境にのみインストールしたいライブラリを記述します。
+オプションなしの `uv sync` コマンドですべてのライブラリをインストールします。
+`.venv` フォルダに仮想環境が作成されます。
+仮想環境内でコマンドを実行したい場合は、`uv run` を先頭に書くことで実行できます。
 
 ```bash
-$ poetry install
+$ uv sync
 
-$ poetry run python  # poetry仮想環境でpythonを起動
+$ uv run python
 ```
 
-`tool.mypy`や`tool.ruff`はリンター、フォーマッターに関する設定を記述しています。リンター、フォーマッターに関してより深く知りたい方はこちら（あとで貼る）の記事を参考にしてください。
+`tool.mypy`や`tool.ruff`はリンター、フォーマッターに関する設定を記述しています。
 
 ライブラリを追加したい場合は
 
-```python
-$ poetry add (ライブラリ名)
+```bash
+$ uv add <ライブラリ名>
+
+# 開発用パッケージの場合は
+$ uv add --dev <ライブラリ名>
 ```
 
-を実行することで、ライブラリ間の依存関係を考慮しつつ、自動でインストールされます。ライブラリ名は[PyPI](https://pypi.org/)に載っているものと一致させる必要があります。その他、詳しく知りたい方は[公式ドキュメント](https://python-poetry.org/docs/pyproject/)を参照してください。
+を実行することで、ライブラリ間の依存関係を考慮しつつ、自動でインストールされます。
+ライブラリ名は[PyPI](https://pypi.org/)に載っているものと一致させる必要があります。
+その他、詳しく知りたい方は[公式ドキュメント](https://docs.astral.sh/uv/#projects)を参照してください。
 
 ## Streamlitの実装
 
-StreamlitはPythonでさくっとUIを作ることができるライブラリです。R&Dでは実際に [Sansan Labs](https://sin.sansan.com/best_practice/sansan-labs-2/) という実験的な機能を提供するサービスで使われています。その他にも Google X や Yelp、Uber などでも使われているようです（[参考](https://streamlit.io/)）。
+StreamlitはPythonでさくっとUIを作ることができるライブラリです。
+R&Dでは実際に [Sansan Labs](https://sin.sansan.com/best_practice/sansan-labs-2/) という実験的な機能を提供するサービスで使われています。
+その他にも Google X や Yelp、Uber などでも使われているようです（[参考](https://streamlit.io/)）。
 
 Streamlitを実行するために、設定ファイル`config.toml`を作成します。
 
 ```bash
-$ touch .streamlit/config.toml  # Bash
+$ mkdir .streamlit && touch .streamlit/config.toml  # bash, zsh
 
-> New-Item .streamlit/config.toml  # Powershell
+> New-Item .streamlit/config.toml -ItemType File -Force  # Powershell
 ```
 
 中身の設定値は以下のように設定してください。
@@ -377,9 +276,9 @@ textColor="#002060"
 pythonファイルを作成します。
 
 ```bash
-$ touch display_table.py  # Bash
+$ touch example1.py  # bash, zsh
 
-> New-Item display_table.py  # Powershell
+> New-Item example1.py  # Powershell
 ```
 
 中身は以下の通りです。
@@ -408,9 +307,9 @@ user_id,company_id,full_name,company_name,address,phone_number
 3087995951,4202933668,井上 太一,株式会社加藤運輸,北海道横浜市神奈川区四区町6丁目19番11号 氏家コーポ195,08-9498-6285
 """
 
-df = pd.read_csv(StringIO(data))
+dummy_data = pd.read_csv(StringIO(data))
 
-st.dataframe(df)
+st.dataframe(dummy_data)
 ```
 
 ここで、実際に描画処理を記述している部分は、タイトル表示`st.title("表の描画")`と表の描画`st.dataframe(df)` の2行のみです。このように、streamlitでは直感的に素早くUIを作成することができます。
@@ -418,7 +317,7 @@ st.dataframe(df)
 それでは、手元で実行してみましょう。
 
 ```bash
-$ poetry run streamlit run display_table.py
+$ uv run streamlit run example1.py
 ```
 
 `http://localhost:8080`に接続し、以下のような画面が出ると成功です。
@@ -431,7 +330,16 @@ $ poetry run streamlit run display_table.py
 
 グラフや図を簡潔に描画できるライブラリ（[参考](https://plotly.com/python/)）。
 
+まずはファイルを作成
+
+```bash
+$ touch example2.py  # bash, zsh
+
+> New-Item example2.py   # Powershell
+```
+
 以下のサンプルコードを実行し、UI上のボタンを押すと、折れ線グラフが描画されます。
+(実行には、`plotly` のインストールが必要なので、`uv add` コマンドを実行してインストールした上で実行してみましょう！)
 
 ```python
 import random
@@ -441,6 +349,7 @@ import streamlit as st
 
 # タイトル
 st.title("グラフの描画")
+
 
 def display_plot(xx: list[int], yy: list[int]) -> None:
     fig = go.Figure()
@@ -453,6 +362,7 @@ def display_plot(xx: list[int], yy: list[int]) -> None:
 
     st.plotly_chart(fig)
 
+
 # 新しい作成し、描画するボタン
 if st.button("グラフを作成"):
     # 新しいデータを作成する
@@ -461,6 +371,12 @@ if st.button("グラフを作成"):
     yy = random.sample(range(10, 20), points_num)
 
     display_plot(xx, yy)
+```
+
+実行
+
+```bash
+$ uv run example2.py
 ```
 
 `if st.button()` 以下に、ボタンが押されたときの処理を書きます。
@@ -473,7 +389,16 @@ if st.button("グラフを作成"):
 
 グラフ（ネットワーク）を描画できるライブラリ（[参考](https://github.com/ChrisDelClea/streamlit-agraph)）。
 
+まずはファイルを作成
+
+```bash
+$ touch example3.py  # bash, zsh
+
+> New-Item example3.py   # Powershell
+```
+
 以下のサンプルコードを実行してみると、画面上にネットワークが表示されます。
+(このコードの実行には `plotly` は不要なので、`uv remove plotly` を実行してライブラリをアンインストールしてみましょう!)
 
 ```python
 import streamlit as st
@@ -506,7 +431,12 @@ config = Config(
 
 # 描画
 agraph(nodes, edges, config)
+```
 
+実行
+
+```bash
+$ uv run example3.py
 ```
 
 このように、ノードリスト(nodes)、エッジリスト(edges)、描画設定(config)を定義すれば簡単にネットワークを描画できます（[参考](https://github.com/ChrisDelClea/streamlit-agraph)）。

@@ -1,13 +1,14 @@
-# R&D Architect 1day Internship
+# R&D 1day Internship
 
-## Run on local
+## ローカル実行
 
 ```bash
-poetry install
-poetry run streamlit run app/main.py
+uv sync
+uv run streamlit run app/main.py
 ```
 
-## Run on Docker
+## コンテナで実行
+本番稼働と同等の環境で実行確認します。
 
 ```bash
 docker build . -f Dockerfile --target prod --tag app
@@ -15,14 +16,14 @@ docker run -it --read-only -p 8080:8080 app
 ```
 
 ## Test
-
+余裕があればテストも実行しましょう。
 ```bash
-poetry run pytest
+uv run pytest
 ```
 
 ## Run linter, formatter
-
+push する前にローカルでコードのチェックをしましょう。
 ```bash
-poetry run ruff check .
-poetry run ruff format .
+uv run ruff check .
+uv run ruff format .
 ```

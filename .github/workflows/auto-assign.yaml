@@ -1,38 +1,38 @@
 # PR の Assignee を自動で追加する
 ---
-    name: Auto Assign
-    run-name: Auto Assign
+name: Auto Assign
+run-name: Auto Assign
 
-    on:
-      pull_request:
-        types: [opened]
+on:
+  pull_request:
+    types: [opened]
 
-    # パーミッションを全て無効化
-    permissions: {}
+# パーミッションを全て無効化
+permissions: {}
 
-    # パイプエラーを有効化
-    defaults:
-      run:
-        shell: bash
+# パイプエラーを有効化
+defaults:
+  run:
+    shell: bash
 
-    # ワークフローの多重起動を抑制
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
+# ワークフローの多重起動を抑制
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
-    jobs:
-      auto-assign:
-        if: ${{ github.event.pull_request.user.login != 'dependabot[bot]' || github.event.pull_request.user.login != 'renovate[bot]' || toJson(github.event.pull_request.assignees) == '[]' }}
-        runs-on: ubuntu-24.04
-        timeout-minutes: 1
-        permissions:
-          pull-requests: write
-          contents: read
-          repository-projects: read
-        steps:
-        - run: gh pr edit "$PULL_NUMBER" --repo "$REPO" --add-assignee "$CREATOR"
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            PULL_NUMBER: ${{ github.event.pull_request.number }}
-            REPO: ${{ github.repository }}
-            CREATOR: ${{ github.event.pull_request.user.login }}
+jobs:
+  auto-assign:
+    if: ${{ github.event.pull_request.user.login != 'dependabot[bot]' || github.event.pull_request.user.login != 'renovate[bot]' || toJson(github.event.pull_request.assignees) == '[]' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 1
+    permissions:
+      pull-requests: write
+      contents: read
+      repository-projects: read
+    steps:
+    - run: gh pr edit "$PULL_NUMBER" --repo "$REPO" --add-assignee "$CREATOR"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        PULL_NUMBER: ${{ github.event.pull_request.number }}
+        REPO: ${{ github.repository }}
+        CREATOR: ${{ github.event.pull_request.user.login }}
