@@ -50,16 +50,12 @@ grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.bashrc || echo 'export PATH="$
 
 ```bash
 uv init --project sample
+
+# bash, zsh
 cd sample && uv run main.py
-```
-
-<details><summary>Windows (PowerShell) 向け</summary>
-
-```powershell
-uv init --project sample
+# Windows (PowerShell)
 cd sample; uv run main.py
 ```
-</details>
 
 以下のように Python が実行されていれば OK です。
 ```bash
