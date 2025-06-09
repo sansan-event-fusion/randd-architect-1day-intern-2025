@@ -1,26 +1,21 @@
-[tool.poetry]
+[project]
 name = "app"
 version = "0.1.0"
 description = "1day intern app"
-authors = ["Sansan, Inc."]
-license = "Proprietary"
-package-mode = false
+requires-python = ">=3.10,<3.14"
+dependencies = [
+    "streamlit>=1.43.2",
+    "streamlit-agraph>=0.0.45",
+    "requests>=2.32.3",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<3.14"
-streamlit = "^1.43.2"
-streamlit-agraph = "^0.0.45"
-requests = "^2.32.3"
-
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.11.2"
-mypy = "^1.15.0"
-pytest = "^8.3.5"
-types-requests = "^2.32.0.20250306"
-
-[build-system]
-requires = ["poetry-core>=1.0.0"]
-build-backend = "poetry.core.masonry.api"
+[dependency-groups]
+dev = [
+    "ruff>=0.11.2",
+    "mypy>=1.15.0",
+    "pytest>=8.3.5",
+    "types-requests>=2.32.0.20250306",
+]
 
 [tool.mypy]
 check_untyped_defs = true
@@ -32,8 +27,20 @@ warn_redundant_casts = true
 ignore_missing_imports = true
 
 [tool.ruff]
-target-version = "py310"
+target-version = "py313"
 line-length = 120
+lint.select = ["ALL"]
+lint.ignore = [
+    "COM812",   # missing-trailing-comma
+    "E741",     # ambiguous-variable-name
+    "ISC001",   # single-line-implicit-string-concatenation
+    "S101",     # assert
+    "S311",     # suspicious-non-cryptographic-random-usage
+    "RET504",   # unnecessary-assign
+    "PLR2004",  # magic-value-comparison
+    "D",        # pydocstyle
+    "ANN",      # flake8-annotations
+]
 exclude = [
     ".git",
     ".github",
@@ -42,29 +49,15 @@ exclude = [
     ".ruff_cache",
     ".venv",
     "__pycache__",
-    "tests",
 ]
 
-[tool.ruff.lint]
-select = ["ALL"]
-ignore = [
-    # missing-trailing-comma
-    "COM812",
-    # ambiguous-variable-name
-    "E741",
-    #  single-line-implicit-string-concatenation
-    "ISC001",
-    # assert
-    "S101",
-    # suspicious-non-cryptographic-random-usage
-    "S311",
-    # unnecessary-assign
-    "RET504",
-    # magic-value-comparison
-    "PLR2004",
-    # pydocstyle
-    "D",
-    # flake8-annotations
-    "ANN",
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*" = [
+    "S101",     # assert
+    "PLR2004",  # magic-value-comparison
+    "INP001",   # input
+    "D"         # pydocstyle
 ]
-mccabe.max-complexity = 5
+
+[tool.ruff.lint.mccabe]
+max-complexity = 5
