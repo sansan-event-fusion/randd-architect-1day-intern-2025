@@ -24,7 +24,7 @@ def get_user_id_from_full_name(full_name: str) -> Optional[str]:
             user_row = df[df["full_name"] == full_name]
             if not user_row.empty:
                 return str(user_row.iloc[0]["user_id"])
-        st.error(f"氏名 "{full_name}" に対応するuser_idが見つかりませんでした")
+        st.error(f"氏名 '{full_name}' に対応するuser_idが見つかりませんでした")
         return None
     except Exception as e:
         st.error(f"user_id取得エラー: {e}")
@@ -39,6 +39,6 @@ full_name = st.text_input("氏名を入力してください")
 
 if full_name:
     user_id = get_user_id_from_full_name(full_name)
-
-    similar_top10_users = fetch_similar_top10_users(user_id)
-    st.dataframe(similar_top10_users)
+    if user_id:
+        similar_top10_users = fetch_similar_top10_users(user_id)
+        st.dataframe(similar_top10_users)
