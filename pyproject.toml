@@ -10,6 +10,7 @@ dependencies = [
     "matplotlib>=3.10.3",
     "scikit-learn>=1.7.0",
     "pandas>=2.3.0",
+    "japanize-matplotlib>=1.1.3",
 ]
 
 [dependency-groups]
