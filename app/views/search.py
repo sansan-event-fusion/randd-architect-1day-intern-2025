@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import streamlit as st
 
 from app.models.company import Company
@@ -5,7 +7,7 @@ from app.util import contains_japanese_match
 
 
 def get_all_companies():
-    with open("app/data/companies.csv", "r") as f:
+    with Path.open("app/data/companies.csv") as f:
         return [
             Company(
                 id=int(line.split(",")[0]),

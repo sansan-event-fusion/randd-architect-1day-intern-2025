@@ -1,6 +1,7 @@
 import os
 import random
 from datetime import datetime, timedelta
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pandas as pd
@@ -34,7 +35,7 @@ def calculate_dependency(contacts_count: int, total_contacts_count: int):
 
 
 def get_user_info(user_id: int):
-    response = requests.get(f"{os.getenv('BASE_URL')}/api/cards/{user_id}")
+    response = requests.get(f"{os.getenv('BASE_URL')}/api/cards/{user_id}", timeout=10)
     response_json = response.json()
     # レスポンスがリストの場合、最初の要素を使用
     if isinstance(response_json, list) and len(response_json) > 0:
@@ -43,8 +44,8 @@ def get_user_info(user_id: int):
 
 
 def get_contacts():
-    with open("app/data/contacts.csv", "r") as f:
-        header = f.readline()
+    with Path.open("app/data/contacts.csv") as f:
+        _ = f.readline()
         contacts = [
             Contact(
                 owner_user_id=int(line.split(",")[0]),

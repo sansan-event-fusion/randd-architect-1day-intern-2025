@@ -3,4 +3,4 @@ from app.models.contacts import CompanyRelation, Contact
 from app.models.my_company_member import MyCompanyMember
 from app.models.other_company_member import OtherCompanyMember
 
-__all__ = ["Company", "MyCompanyMember", "OtherCompanyMember", "Contact", "CompanyRelation"]
+__all__ = ["Company", "CompanyRelation", "Contact", "MyCompanyMember", "OtherCompanyMember"]
