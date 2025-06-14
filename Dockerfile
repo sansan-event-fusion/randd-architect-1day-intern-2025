@@ -54,5 +54,6 @@ WORKDIR /app
 COPY --from=build ${PYSETUP_PATH}/ ${PYSETUP_PATH}/
 COPY app/ app/
 COPY .streamlit/ .streamlit/
+COPY main.py main.py
 EXPOSE 8080
 CMD ["streamlit", "run", "main.py"]
