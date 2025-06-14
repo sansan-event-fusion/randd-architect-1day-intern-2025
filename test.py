@@ -12,9 +12,9 @@ for card in cards:
     response = requests.get(url)
     data = json.loads(response.text)
 
-    cand_dict[card["full_name"]+'_'+card["company_name"]] = data
+    cand_dict[card["full_name"]+"_"+card["company_name"]] = data
 
-with open("cand.json", 'w') as f:
+with open("cand.json", "w") as f:
     json.dump(cand_dict, f, ensure_ascii=False, indent=4)
 
 
