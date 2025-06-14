@@ -7,6 +7,8 @@ dependencies = [
     "streamlit>=1.43.2",
     "streamlit-agraph>=0.0.45",
     "requests>=2.32.3",
+    "pandas>=2.3.0",
+    "plotly>=6.1.2",
 ]
 
 [dependency-groups]
