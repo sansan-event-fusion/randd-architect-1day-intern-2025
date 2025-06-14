@@ -55,9 +55,21 @@ def get_user_details(user_id: str) -> dict:
                 "address": str(cards_df.get("address", ["N/A"]).iloc[0]),
                 "phone_number": str(cards_df.get("phone_number", ["N/A"]).iloc[0])
             }
-        return {"full_name": f"Unknown ({user_id})", "position": "N/A", "company_name": "N/A", "address": "N/A", "phone_number": "N/A"}
+        return {
+            "full_name": f"Unknown ({user_id})",
+            "position": "N/A",
+            "company_name": "N/A",
+            "address": "N/A",
+            "phone_number": "N/A"
+        }
     except (KeyError, ValueError, AttributeError):
-        return {"full_name": f"Unknown ({user_id})", "position": "N/A", "company_name": "N/A", "address": "N/A", "phone_number": "N/A"}
+        return {
+            "full_name": f"Unknown ({user_id})",
+            "position": "N/A",
+            "company_name": "N/A",
+            "address": "N/A",
+            "phone_number": "N/A"
+        }
 
 def fetch_similar_top10_users(user_id: str) -> pd.DataFrame:
     api_url = "https://circuit-trial.stg.rd.ds.sansan.com/api/cards/" + user_id + "/similar_top10_users"
@@ -70,7 +82,6 @@ if full_name:
     user_id = get_user_id_from_full_name(full_name)
     if user_id:
         similar_top10_users_df = fetch_similar_top10_users(user_id)
-        # st.dataframe(similar_top10_users_df)
 
         # コンタクト履歴を取得
         contact_url = "https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/owner_users/" + user_id
