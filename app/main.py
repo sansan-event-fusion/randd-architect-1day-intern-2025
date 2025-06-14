@@ -161,7 +161,7 @@ st.write(f"### {sel_company} の取引業種分布")
 fig, ax = plt.subplots(figsize=(8,5))
 ax.bar(trade_cnt['industry'], trade_cnt['count'])
 ax.set_ylabel("取引件数（カード交換数）")
-ax.set_xticklabels(trade_cnt['industry'], rotation=45, ha='right')
+ax.set_xticklabels(trade_cnt["industry"], rotation=45, ha="right")
 st.pyplot(fig)
 
 # 元データプレビュー
