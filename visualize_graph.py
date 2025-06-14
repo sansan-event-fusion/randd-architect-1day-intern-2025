@@ -3,10 +3,10 @@ import json
 import matplotlib.pyplot as plt
 import networkx as nx
 
-with open("cards.json", "r", encoding="utf-8") as f:
+with open("cards.json", encoding="utf-8") as f:
     cards = json.load(f)
 
-with open("contacts.json", "r", encoding="utf-8") as f:
+with open("contacts.json", encoding="utf-8") as f:
     contacts = json.load(f)
 
 G = nx.Graph()

@@ -2,7 +2,7 @@ import json
 
 import requests
 
-with open('cards.json', 'r', encoding='utf-8') as f:
+with open("cards.json", "r", encoding="utf-8") as f:
     cards = json.load(f)
 
 cand_dict = {}
