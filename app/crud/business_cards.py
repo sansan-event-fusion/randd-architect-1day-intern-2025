@@ -23,7 +23,15 @@ class BusinessCardCRUD:
         """Get a specific business card by user ID."""
         response = requests.get(f"{self.base_url}/cards/{user_id}", timeout=30)
         response.raise_for_status()
-        return BusinessCardResponse(**response.json())
+        data = response.json()
+
+        # APIがリストを返す場合は最初の要素を取得
+        if isinstance(data, list):
+            if not data:
+                error_message = f"User {user_id} not found"
+                raise ValueError(error_message)
+            return BusinessCardResponse(**data[0])
+        return BusinessCardResponse(**data)
 
     def get_cards_count(self) -> int:
         """Get total count of business cards."""

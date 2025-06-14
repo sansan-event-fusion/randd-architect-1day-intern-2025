@@ -2,6 +2,7 @@ import pandas as pd
 import streamlit as st
 
 from app.crud import BusinessCardCRUD
+from app.crud.models import BusinessCardResponse
 
 
 def display_business_cards() -> None:
@@ -30,14 +31,14 @@ def display_business_cards() -> None:
         st.info("名刺データが見つかりませんでした")
 
 
-def display_similar_user_search(business_cards: BusinessCardCRUD, cards: list) -> None:
+def display_similar_user_search(business_cards: BusinessCardCRUD, cards: list[BusinessCardResponse]) -> None:
     """類似ユーザー検索コンポーネント."""
     st.subheader("類似ユーザー検索")
     user_ids = [card.user_id for card in cards]
     selected_user_id = st.selectbox("ユーザーIDを選択", user_ids)
 
     if st.button("類似ユーザーを検索"):
-        similar_users = business_cards.get_similar_users(selected_user_id)
+        similar_users = business_cards.get_similar_users(int(selected_user_id))
         if similar_users:
             similar_data = [user.model_dump() for user in similar_users]
             similar_df = pd.DataFrame(similar_data)

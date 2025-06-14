@@ -8,8 +8,8 @@ from app.components import display_analytics_dashboard, display_business_cards, 
 
 
 def main() -> None:  # noqa: C901
-    """名刺・交換履歴管理アプリ"""
-    st.title("名刺・交換履歴管理アプリ")
+    """名刺・交換履歴分析アプリ"""
+    st.title("名刺・交換履歴分析アプリ")
 
     # サイドバーでデータ選択
     data_type = st.sidebar.selectbox("表示するデータを選択", ["📊 アナリティクス", "👤 名刺データ", "📋 交換履歴"])

@@ -9,16 +9,30 @@ from app.crud import BusinessCardCRUD, ContactHistoryCRUD
 
 def display_analytics_dashboard() -> None:
     """名刺交換効率化アナリティクスダッシュボード."""
-    st.header("📊 名刺交換効率化アナリティクス")
+
+    # サイドバーでデータ設定
+    st.sidebar.subheader("📊 データ設定")
+    contact_limit = st.sidebar.slider(
+        "交換履歴取得数",
+        min_value=100,
+        max_value=10000,
+        value=1000,
+        step=100,
+        help="分析に使用する交換履歴の件数を設定",
+    )
+
+    card_limit = st.sidebar.slider(
+        "名刺取得数", min_value=50, max_value=5000, value=500, step=50, help="分析に使用する名刺の件数を設定"
+    )
 
     # データ取得
     contacts_crud = ContactHistoryCRUD()
     cards_crud = BusinessCardCRUD()
 
     # データロード
-    with st.spinner("データを読み込み中..."):
-        all_contacts = contacts_crud.get_all_contacts(limit=1000)
-        all_cards = cards_crud.get_all_cards(limit=500)
+    with st.spinner(f"データを読み込み中... (交換履歴: {contact_limit:,}件, 名刺: {card_limit:,}件)"):
+        all_contacts = contacts_crud.get_all_contacts(limit=contact_limit)
+        all_cards = cards_crud.get_all_cards(limit=card_limit)
 
     if not all_contacts:
         st.warning("交換履歴データがありません")
@@ -28,6 +42,16 @@ def display_analytics_dashboard() -> None:
     contacts_df = pd.DataFrame([contact.model_dump() for contact in all_contacts])
     cards_df = pd.DataFrame([card.model_dump() for card in all_cards])
 
+    # サイドバーにデータ統計表示
+    st.sidebar.subheader("📈 データ統計")
+    st.sidebar.metric("実際の交換履歴数", f"{len(contacts_df):,}件")
+    st.sidebar.metric("実際の名刺数", f"{len(cards_df):,}件")
+    if len(contacts_df) > 0:
+        unique_users = len(contacts_df["owner_user_id"].unique())
+        unique_companies = len(contacts_df["owner_company_id"].unique())
+        st.sidebar.metric("参加ユーザー数", f"{unique_users:,}人")
+        st.sidebar.metric("参加企業数", f"{unique_companies:,}社")
+
     # datetime型に変換
     contacts_df["created_at"] = pd.to_datetime(contacts_df["created_at"])
     # 便利なカラムを追加
@@ -36,7 +60,7 @@ def display_analytics_dashboard() -> None:
     contacts_df["target_company_id"] = contacts_df["company_id"]
 
     # タブで分割
-    tab1, tab2, tab3 = st.tabs(["🕐 時間帯分析", "🗺️ 地域分析", "💡 最適化提案"])
+    tab1, tab2, tab3, tab4 = st.tabs(["🕐 時間帯分析", "🗺️ 地域分析", "🔗 類似度分析", "💡 最適化提案"])
 
     with tab1:
         display_time_analysis(contacts_df)
@@ -45,6 +69,11 @@ def display_analytics_dashboard() -> None:
         display_regional_analysis(contacts_df, cards_df)
 
     with tab3:
+        from .similarity_network import display_similarity_analysis
+
+        display_similarity_analysis(cards_crud, card_limit)
+
+    with tab4:
         display_optimization_suggestions(contacts_df)
 
 
@@ -159,6 +188,134 @@ def display_regional_analysis(contacts_df: pd.DataFrame, cards_df: pd.DataFrame)
             labels={"x": "交換回数", "y": "会社"},
         )
         st.plotly_chart(fig_company, use_container_width=True)
+
+
+def display_similarity_analysis(cards_crud: BusinessCardCRUD, card_limit: int) -> None:  # noqa: PLR0915, C901
+    """類似度分析."""
+    st.subheader("🔗 類似度分析")
+    # 説明文を追加
+    st.info("💡 各ユーザーに対して **上位10名** の類似ユーザーを分析します")
+
+    # サンプルユーザー数の設定
+    sample_limit = min(50, card_limit)  # 最大50人まで、card_limitを超えない
+
+    # サンプルユーザーを取得
+    sample_cards = cards_crud.get_all_cards(limit=sample_limit)
+    if not sample_cards:
+        st.warning("名刺データがありません")
+        return
+
+    # ユーザー選択
+    user_options = {f"{card.full_name} ({card.company_name})": card.user_id for card in sample_cards}
+    selected_user_display = st.selectbox("分析対象ユーザーを選択", list(user_options.keys()))
+    selected_user_id = user_options[selected_user_display]
+
+    # 類似ユーザーを取得
+    with st.spinner("類似ユーザーを分析中..."):
+        try:
+            similar_users = cards_crud.get_similar_users(int(selected_user_id))
+
+            if similar_users:
+                # 類似度データを DataFrame に変換
+                similarity_data = [
+                    {
+                        "名前": user.full_name,
+                        "会社名": user.company_name,
+                        "類似度": user.similarity,
+                        "user_id": user.user_id,
+                    }
+                    for user in similar_users
+                ]
+
+                similarity_df = pd.DataFrame(similarity_data)
+
+                col1, col2 = st.columns(2)
+
+                with col1:
+                    # 類似度分布ヒストグラム
+                    fig_hist = px.histogram(
+                        similarity_df,
+                        x="類似度",
+                        nbins=10,
+                        title="類似度分布",
+                        labels={"x": "類似度", "y": "ユーザー数"},
+                    )
+                    st.plotly_chart(fig_hist, use_container_width=True)
+
+                    # 統計情報
+                    st.subheader("📊 類似度統計 (Top 10)")
+                    col_a, col_b, col_c = st.columns(3)
+                    with col_a:
+                        st.metric("検出ユーザー数", f"{len(similarity_df)}人")
+                    with col_b:
+                        st.metric("最高類似度", f"{similarity_df['類似度'].max():.3f}")
+                    with col_c:
+                        # 上位3の平均
+                        top3_avg = similarity_df.head(3)["類似度"].mean()
+                        st.metric("上位3平均", f"{top3_avg:.3f}")
+
+                with col2:
+                    # 類似度ランキング 棒グラフ
+                    top_similar = similarity_df.head(10)
+                    fig_bar = px.bar(
+                        top_similar,
+                        x="類似度",
+                        y="名前",
+                        orientation="h",
+                        title="類似度ランキング (Top 10)",
+                        labels={"x": "類似度", "y": "ユーザー"},
+                        color="類似度",
+                        color_continuous_scale="viridis",
+                    )
+                    st.plotly_chart(fig_bar, use_container_width=True)
+
+                # 詳細テーブル
+                st.subheader("📋 類似ユーザー詳細")
+                # 類似度でソート
+                similarity_df_sorted = similarity_df.sort_values("類似度", ascending=False)
+
+                # 類似度カテゴリー分類(Top 10内での相対評価)
+                def categorize_similarity(score):  # このデモデータだとめっちゃ高いのばっかだから全部`極めて高い`
+                    if score >= 0.95:
+                        return "🔥 極めて高い"
+                    if score >= 0.9:
+                        return "⭐ 高い"
+                    if score >= 0.8:
+                        return "✅ 中程度"
+                    return "📊 標準"
+
+                similarity_df_sorted["類似度レベル"] = similarity_df_sorted["類似度"].apply(categorize_similarity)
+
+                # 表示用にuser_idを除外
+                display_df = similarity_df_sorted[["名前", "会社名", "類似度", "類似度レベル"]].copy()
+                display_df["類似度"] = display_df["類似度"].round(3)
+
+                st.dataframe(display_df, use_container_width=True)
+
+                # 会社別類似度分析
+                st.subheader("🏢 会社別類似度分析")
+                company_similarity = similarity_df.groupby("会社名")["類似度"].agg(["mean", "count"]).reset_index()
+                company_similarity.columns = ["会社名", "平均類似度", "ユーザー数"]
+                company_similarity = company_similarity.sort_values("平均類似度", ascending=False)
+
+                if len(company_similarity) > 1:
+                    fig_company = px.scatter(
+                        company_similarity,
+                        x="平均類似度",
+                        y="ユーザー数",
+                        hover_data=["会社名"],
+                        title="会社別類似度vs人数",
+                        labels={"x": "平均類似度", "y": "類似ユーザー数"},
+                    )
+                    st.plotly_chart(fig_company, use_container_width=True)
+                else:
+                    st.info("会社別分析には複数の会社のデータが必要です")
+
+            else:
+                st.info("類似ユーザーが見つかりませんでした")
+
+        except Exception as e:  # noqa: BLE001
+            st.error(f"類似度分析エラー: {e!s}")
 
 
 def display_optimization_suggestions(contacts_df: pd.DataFrame) -> None:
