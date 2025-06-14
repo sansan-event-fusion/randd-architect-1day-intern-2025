@@ -94,10 +94,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import requests
 import streamlit as st
-import requests
-import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib as mpl
+from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
 
