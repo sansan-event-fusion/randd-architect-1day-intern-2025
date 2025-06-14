@@ -8,6 +8,8 @@ dependencies = [
     "streamlit-agraph>=0.0.45",
     "requests>=2.32.3",
     "matplotlib>=3.10.3",
+    "scikit-learn>=1.7.0",
+    "pandas>=2.3.0",
 ]
 
 [dependency-groups]
