@@ -36,10 +36,10 @@ if __name__ == "__main__":
 
     if not df_cards.empty:
         st.subheader("詳細情報")
-        selected_name = st.selectbox("詳細を表示するカードを選択", options=df_cards["full_name"].tolist())
+        selected_name: str = st.selectbox("詳細を表示するカードを選択", options=df_cards["full_name"].tolist())
 
         # 選択されたカードの詳細を表示
-        selected_card = df_cards[df_cards["full_name"] == selected_name].iloc[0]
+        selected_card: dict[str, Any] = df_cards[df_cards["full_name"] == selected_name].iloc[0]
 
         col1, col2 = st.columns(2)
         with col1:
