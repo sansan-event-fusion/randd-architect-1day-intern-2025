@@ -1,8 +1,8 @@
-from pathlib import Path
 
 import pandas as pd
-import streamlit as st
 import requests
+import streamlit as st
+
 
 def fetch_api_data(url: str) -> pd.DataFrame:
     """指定されたURLからAPIデータを取得してDataFrameに変換"""
