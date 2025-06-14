@@ -39,7 +39,7 @@ def create_connection_graph(cards: list[dict[str, Any]], contacts: list[dict[str
     user_id_to_name = {card["user_id"]: card["full_name"] for card in cards}
 
     # 接続先ユーザーの次数を計算
-    target_degree = {}
+    target_degree: dict[int, int] = {}
     for contact in contacts:
         target_id = contact["user_id"]
         target_degree[target_id] = target_degree.get(target_id, 0) + 1
