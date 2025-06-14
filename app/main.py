@@ -1,7 +1,9 @@
-import pandas as pd
-import streamlit as st
-import requests
 from datetime import datetime
+
+import pandas as pd
+import requests
+import streamlit as st
+import altair as alt
 
 
 # タイトル
@@ -17,6 +19,7 @@ response = requests.get(
     f"https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/owner_companies/{owner_company_id}",
     # params={"offset": 0, "limit": 500},
     headers={"accept": "application/json"},
+    timeout=30,
 )
 
 json_data = response.json()
@@ -40,7 +43,21 @@ sorted_counts = dict(sorted(company_counts.items(), key=lambda x: x[1], reverse=
 df = pd.DataFrame(sorted_counts.items(), columns=["company_id", "count"])
 df_top10 = df.head(10)  # 上位10件のみを抽出
 st.write(df_top10)
-st.bar_chart(df_top10, x="company_id", y="count")
+
+df2 = df_top10.reset_index()  # company_id, count の列を持つ DataFrame
+
+chart = (
+    alt.Chart(df2)
+    .mark_bar()
+    .encode(
+        x=alt.X(
+            "company_id:N",
+            sort=alt.EncodingSortField(field="count", order="descending"),
+        ),
+        y="count:Q",
+    )
+)
+st.altair_chart(chart, use_container_width=True)
 
 
 target_company_id = st.number_input("取引先のcompany_idを入力してください", step=1)
@@ -59,13 +76,14 @@ else:
     response_company_name = requests.get(
         f"https://circuit-trial.stg.rd.ds.sansan.com/api/cards/{target_company_user_id}",
         headers={"accept": "application/json"},
+        timeout=30,
     )
     company_name_json_data = response_company_name.json()
     target_company_name = company_name_json_data[0].get("company_name")
     st.write(f"target_company_name: {target_company_name}")
 
     # owner_user_idの出現回数をカウント
-    st.write(f"各社員の{target_company_name}との名刺交換回数（上位10名）")
+    st.write(f"各社員の{target_company_name}との名刺交換回数")
     owner_user_counts = {}
     owner_user_received_ids = {}
     for data in target_company_data:
@@ -88,7 +106,19 @@ else:
 
     # グラフで可視化
     df = pd.DataFrame(sorted_counts.items(), columns=["owner_user_id", "count"])
-    st.bar_chart(df, x="owner_user_id", y="count")
+    df2 = df.reset_index()  # owner_user_id, count の列を持つ DataFrame
+    chart = (
+        alt.Chart(df2)
+        .mark_bar()
+        .encode(
+            x=alt.X(
+                "owner_user_id:N",
+                sort=alt.EncodingSortField(field="count", order="descending"),
+            ),
+            y="count:Q",
+        )
+    )
+    st.altair_chart(chart, use_container_width=True)
 
     # 最近名刺交換した人を表示
     st.write("最近名刺交換した人（上位10名）")
@@ -96,28 +126,42 @@ else:
     for data in target_company_data:
         owner_user_id = data.get("owner_user_id")
         if owner_user_id:
-            owner_user_dates[owner_user_id] = data.get("created_at")
+            if owner_user_id not in owner_user_dates.keys():
+                owner_user_dates[owner_user_id] = datetime.fromisoformat(
+                    data.get("created_at").replace("Z", "+00:00")
+                )
+            else:
+                recent_date = max(
+                    owner_user_dates[owner_user_id],
+                    datetime.fromisoformat(
+                        data.get("created_at").replace("Z", "+00:00")
+                    ),
+                )
+                owner_user_dates[owner_user_id] = recent_date
 
     # 交換日時でソート
-    sorted_counts = dict(
+    sorted_owner_user_dates = dict(
         sorted(
             owner_user_dates.items(),
-            key=lambda x: datetime.fromisoformat(x[1].replace("Z", "+00:00")),
+            key=lambda x: x[1],
             reverse=True,
         )
     )
 
     # 結果を表示
-    for owner_user_id, date in list(sorted_counts.items())[:10]:
-        st.write(f"owner_user_id: {owner_user_id} - 名刺交換日: {date[:10]}")
+    for owner_user_id, date in list(sorted_owner_user_dates.items()):
+        st.write(
+            f"owner_user_id: {owner_user_id} - 最新交換日: {date.strftime('%Y年%m月%d日')} （累計交換回数：{sorted_counts[owner_user_id]}）"
+        )
 
 
 # 名刺交換の詳細
-user_id = st.number_input(f"名刺交換の詳細を表示するuser_idを入力してください", step=1)
+user_id = st.number_input("名刺交換の詳細を表示するuser_idを入力してください", step=1)
 
 response_user_detail = requests.get(
     f"https://circuit-trial.stg.rd.ds.sansan.com/api/cards/{user_id}",
     headers={"accept": "application/json"},
+    timeout=30,
 )
 if user_id == 0:
     pass
@@ -134,6 +178,7 @@ else:
             response_received_user_detail = requests.get(
                 f"https://circuit-trial.stg.rd.ds.sansan.com/api/cards/{received_user_id}",
                 headers={"accept": "application/json"},
+                timeout=10,
             )
             if response_received_user_detail.status_code == 200:
                 received_user_detail_json_data = response_received_user_detail.json()[0]
