@@ -65,26 +65,27 @@ if full_name:
             contact_user_ids = contact_df["user_id"].tolist()
             matching_contacts = contact_df[contact_df["user_id"].isin(similar_user_ids)]
 
-            # コンタクト履歴のない類似ユーザーを表示
-            no_contact_user_ids = [uid for uid in similar_user_ids if uid not in contact_user_ids]
-            if no_contact_user_ids:
-                st.subheader("あなたとのコンタクト履歴のない類似ユーザー")
-                st.write(no_contact_user_ids)
+            # すべての類似ユーザーとのグラフ表示
+            st.subheader("すべての類似ユーザーとの関係図")
+            current_user_name = get_full_name_from_user_id(user_id)
+            nodes = [Node(id=user_id, label=f"{current_user_name}", color="#FF6B6B")]
+            edges = []
 
-                # グラフ表示
-                st.subheader("コンタクト履歴のない類似ユーザーとの関係図")
-                current_user_name = get_full_name_from_user_id(user_id)
-                nodes = [Node(id=user_id, label=f"{current_user_name}", color="#FF6B6B")]
-                edges = []
+            for similar_id in similar_user_ids:
+                similar_user_name = get_full_name_from_user_id(similar_id)
+                
+                # コンタクト履歴の有無で色を分ける
+                if similar_id in contact_user_ids:
+                    # コンタクト履歴あり - 緑色
+                    nodes.append(Node(id=similar_id, label=f"{similar_user_name}", color="#2ECC71"))
+                    edges.append(Edge(source=user_id, target=similar_id, label="コンタクト済み", color="#27AE60", width=3))
+                else:
+                    # コンタクト履歴なし - 青色
+                    nodes.append(Node(id=similar_id, label=f"{similar_user_name}", color="#3498DB"))
 
-                for no_contact_id in no_contact_user_ids:
-                    similar_user_name = get_full_name_from_user_id(no_contact_id)
-                    nodes.append(Node(id=no_contact_id, label=f"{similar_user_name}", color="#4ECDC4"))
-                    edges.append(Edge(source=user_id, target=no_contact_id, label="類似", color="#95A5A6"))
-
-                config = Config(width=800, height=600, directed=False, physics=True, hierarchical=False)
-                agraph(nodes=nodes, edges=edges, config=config)
+            config = Config(width=800, height=600, directed=False, physics=True, hierarchical=False)
+            agraph(nodes=nodes, edges=edges, config=config)
 
 
-        st.subheader("あなたの全コンタクト履歴")
-        st.dataframe(contact_df)
+        # st.subheader("あなたの全コンタクト履歴")
+        # st.dataframe(contact_df)
