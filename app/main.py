@@ -73,15 +73,15 @@ if full_name:
 
             for similar_id in similar_user_ids:
                 similar_user_name = get_full_name_from_user_id(similar_id)
-                
+
                 # コンタクト履歴の有無で色を分ける
                 if similar_id in contact_user_ids:
                     # コンタクト履歴あり - 緑色
-                    nodes.append(Node(id=similar_id, label=f"{similar_user_name}", color="#2ECC71"))
-                    edges.append(Edge(source=user_id, target=similar_id, label="コンタクト済み", color="#27AE60", width=3))
+                    nodes.append(Node(id=similar_id, label=f"{similar_user_name}"))
+                    edges.append(Edge(source=user_id, target=similar_id, label="コンタクト済み"))
                 else:
                     # コンタクト履歴なし - 青色
-                    nodes.append(Node(id=similar_id, label=f"{similar_user_name}", color="#3498DB"))
+                    nodes.append(Node(id=similar_id, label=f"{similar_user_name}"))
 
             config = Config(width=800, height=600, directed=False, physics=True, hierarchical=False)
             agraph(nodes=nodes, edges=edges, config=config)
