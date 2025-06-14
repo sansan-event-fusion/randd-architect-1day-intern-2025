@@ -98,9 +98,9 @@ from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
 
 # 日本語フォント設定
-mpl.rcParams['font.family']        = 'sans-serif'
-mpl.rcParams['font.sans-serif']   = ['IPAPGothic','Meiryo','Yu Gothic','TakaoPGothic']
-mpl.rcParams['axes.unicode_minus'] = False
+mpl.rcParams["font.family"]        = "sans-serif"
+mpl.rcParams["font.sans-serif"]   = ["IPAPGothic","Meiryo","Yu Gothic","TakaoPGothic"]
+mpl.rcParams["axes.unicode_minus"] = False
 
 # API取得
 API_URL = "https://circuit-trial.stg.rd.ds.sansan.com/api/cards/"
