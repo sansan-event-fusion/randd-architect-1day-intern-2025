@@ -7,7 +7,7 @@ from components import display_business_cards, display_contact_history
 
 
 def main() -> None:
-    st.title("名刺・交換履歴管理アプリ")
+    st.title("名刺・交換履歴管理アプリ v2")
 
     # サイドバーでデータ選択
     data_type = st.sidebar.selectbox("表示するデータを選択", ["名刺データ", "交換履歴"])
