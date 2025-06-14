@@ -3,7 +3,7 @@ import json
 import streamlit as st
 
 # JSONファイルを読み込む
-with open("cand.json", encoding="utf-8") as f:
+with open("app/cand.json", encoding="utf-8") as f:
     cand_data = json.load(f)
 
 # StreamlitのUI
