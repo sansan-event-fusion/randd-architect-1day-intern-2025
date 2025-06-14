@@ -4,8 +4,6 @@ import requests
 
 import streamlit as st
 import streamlit as st
-from typing import Optional
-st.title("サンプルアプリ")
 
 def fetch_api_data(url: str) -> pd.DataFrame:
     """指定されたURLからAPIデータを取得してDataFrameに変換"""
