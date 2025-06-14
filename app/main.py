@@ -130,7 +130,7 @@ cluster_names = ["／".join(terms[order[i,:5]]) for i in range(n_clusters)]
 # UI: 業種→会社選択 → 可視化
 sel_ind       = st.sidebar.selectbox("業種を選択", cluster_names)
 sel_cluster   = cluster_names.index(sel_ind)
-candidates    = df[df['cluster']==sel_cluster]['company_name'].unique()
+candidates    = df[df["cluster"]==sel_cluster]["company_name"].unique()
 sel_company   = st.sidebar.selectbox("会社を選択", candidates)
 
 # 選択会社の company_id を取得
