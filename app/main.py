@@ -10,7 +10,7 @@ cards_endpoint = "cards"
 contacts_endpoint = "contacts"
 headers = {"Content-Type": "application/json"}
 
-page = st.selectbox("アプリ選択", ["営業先リコメンドアプリ", "名刺交換履歴アプリ", "A"])
+page = st.selectbox("アプリ選択", ["営業先リコメンドアプリ", "名刺交換履歴アプリ"])
 
 if page == "営業先リコメンドアプリ":
     st.write("営業先リコメンドアプリを選択しました。")
@@ -30,16 +30,47 @@ if page == "営業先リコメンドアプリ":
             user_cards = cards_data[cards_data["user_id"] == selected_user_id]
             if not user_cards.empty:
                 st.write("選択されたユーザーのカード情報")
-                st.dataframe(user_cards)
+                for _, row in user_cards.iterrows():
+                    with st.container():
+                        st.markdown(
+                            f"""
+                        <div style="border: 1px solid #ccc; padding: 10px; border-radius: 10px; margin-bottom: 10px;">
+                            <strong>名前:</strong> {row["full_name"]}<br>
+                            <strong>ユーザーID:</strong> {row["user_id"]}<br>
+                            <strong>役職:</strong> {row["position"]}<br>
+                            <strong>電話番号:</strong> {row["phone_number"]}<br>
+                            <strong>企業:</strong> {row["company_name"]}<br>
+                            <strong>企業ID:</strong> {row["company_id"]}<br>
+                            <strong>住所:</strong> {row["address"]}<br>
+                        </div>
+                        """,
+                            unsafe_allow_html=True,
+                        )
                 # 類似ユーザーのリコメンド
                 sim_url = f"{API_URL}cards/{selected_user_id}/similar_top10_users"
                 sim_response = requests.get(sim_url, headers=headers, timeout=2000)
 
                 if sim_response.status_code == 200:
-                    sim_data = sim_response.json()
-                    sim_df = pd.DataFrame(sim_data)
+                    sim_df = pd.DataFrame(sim_response.json())
                     st.subheader("営業先リコメンド候補")
-                    st.dataframe(sim_df)
+                    for _, row in sim_df.iterrows():
+                        with st.expander(f"{row['full_name']}"), st.container():
+                            st.markdown(
+                                f"""
+                                <div style="border: 1px solid #ccc; padding: 10px; border-radius: 10px;
+                                margin-bottom: 10px;">
+                                    <strong>名前:</strong> {row["full_name"]}<br>
+                                    <strong>ユーザーID:</strong> {row["user_id"]}<br>
+                                    <strong>役職:</strong> {row["position"]}<br>
+                                    <strong>電話番号:</strong> {row["phone_number"]}<br>
+                                    <strong>企業:</strong> {row["company_name"]}<br>
+                                    <strong>企業ID:</strong> {row["company_id"]}<br>
+                                    <strong>住所:</strong> {row["address"]}<br>
+                                    <strong>類似度:</strong> {row["similarity"]:.2f}
+                                </div>
+                                """,
+                                unsafe_allow_html=True,
+                            )
                 else:
                     st.error(f"類似ユーザー取得エラー: {sim_response.status_code}")
         else:
@@ -66,6 +97,24 @@ elif page == "名刺交換履歴アプリ":
         if selected_user_list:
             selected_user = selected_user_list[0]
             selected_user_id = selected_user.split("(")[-1].strip(")")
+            st.write("選択されたユーザーのカード情報")
+            user_cards = cards_data[cards_data["user_id"] == selected_user_id]
+            for _, row in user_cards.iterrows():
+                with st.container():
+                    st.markdown(
+                        f"""
+                    <div style="border: 1px solid #ccc; padding: 10px; border-radius: 10px; margin-bottom: 10px;">
+                        <strong>名前:</strong> {row["full_name"]}<br>
+                        <strong>ユーザーID:</strong> {row["user_id"]}<br>
+                        <strong>役職:</strong> {row["position"]}<br>
+                        <strong>電話番号:</strong> {row["phone_number"]}<br>
+                        <strong>企業:</strong> {row["company_name"]}<br>
+                        <strong>企業ID:</strong> {row["company_id"]}<br>
+                        <strong>住所:</strong> {row["address"]}<br>
+                    </div>
+                    """,
+                        unsafe_allow_html=True,
+                    )
             # 選択されたユーザーの名刺交換履歴を取得
             user_contacts = contacts_data[contacts_data["user_id"] == selected_user_id]
             if not user_contacts.empty:
