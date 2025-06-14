@@ -1,27 +1,9 @@
-# -*- coding: utf-8 -*-
-"""
-みちび君
-――― 最短ルートで “ご縁” をナビゲート！ ―――
-2025-06-14
-------------------------------------------------------------
-✓ あなたのプロフィールは初回選択 → セッション保存
-✓ 連絡したい相手を企業・役職で絞込み
-✓ 人脈グラフから最短パス＋親密度（強≥10 / 普4-9 / 弱≤3）
-✓ 名刺交換日＋経過日数を統合表示「YYYY-MM-DD（N日経過）」
-✓ UID 列を非表示、CSV ダウンロード可
-------------------------------------------------------------
-"""
-
-# ------------------------------------------------------------
-# Imports & basic config
-# ------------------------------------------------------------
 import os
-from datetime import date
 from concurrent.futures import ThreadPoolExecutor
-from typing import Dict, List, Optional, Tuple
+from datetime import date
 
-import pandas as pd
 import networkx as nx
+import pandas as pd
 import requests
 import streamlit as st
 from requests.adapters import HTTPAdapter, Retry
@@ -87,7 +69,7 @@ POSITION_COL = next((c for c in cards_df.columns if c.lower() in ("position", "t
 BASE_COLS = (
     ["full_name", "company_name"] + ([PHONE_COL] if PHONE_COL else []) + ([POSITION_COL] if POSITION_COL else [])
 )
-user_info: Dict[str, Dict[str, str]] = cards_df.set_index("user_id")[BASE_COLS].fillna("").to_dict("index")
+user_info: dict[str, dict[str, str]] = cards_df.set_index("user_id")[BASE_COLS].fillna("").to_dict("index")
 companies = sorted(cards_df["company_name"].dropna().unique().tolist())
 
 # ------------------------------------------------------------
@@ -97,7 +79,7 @@ if "my_user_id" not in st.session_state:
     st.sidebar.markdown("### 🧑‍💼 あなたのプロフィール設定")
     my_company = st.sidebar.selectbox("所属企業", options=companies, key="sel_my_company")
     my_candidates = cards_df.query("company_name == @my_company and full_name.notna()")
-    my_user_id = st.sidebar.selectbox(
+    my_user_id: str = st.sidebar.selectbox(
         "あなたの名前",
         options=my_candidates["user_id"],
         format_func=lambda x: user_info[x]["full_name"],
@@ -134,7 +116,7 @@ if role_choice != "(指定なし)":
     st.sidebar.info(f"該当者 {len(target_ids)} 名")
 else:
     cand = cards_df.query("company_name == @tg_company and full_name.notna()")
-    sel_id = st.sidebar.selectbox(
+    sel_id: str = st.sidebar.selectbox(
         "相手の名前", cand["user_id"], format_func=lambda x: user_info[x]["full_name"], key="sel_tg_user"
     )
     target_ids = [sel_id]
@@ -155,7 +137,7 @@ for _, row in contacts_df.iterrows():
         G.add_edge(a, b, weight=G[a][b]["weight"] + 1 if G.has_edge(a, b) else 1)
 
 
-def exchange_between(uid1: str, uid2: str) -> Optional[pd.Timestamp]:
+def exchange_between(uid1: str, uid2: str) -> pd.Timestamp | None:
     m = ((contacts_df["owner_user_id"] == uid1) & (contacts_df["user_id"] == uid2)) | (
         (contacts_df["owner_user_id"] == uid2) & (contacts_df["user_id"] == uid1)
     )
@@ -163,7 +145,7 @@ def exchange_between(uid1: str, uid2: str) -> Optional[pd.Timestamp]:
     return s.min() if not s.empty else None
 
 
-def first_exchange(uid: str) -> Optional[pd.Timestamp]:
+def first_exchange(uid: str) -> pd.Timestamp | None:
     m = ((contacts_df["owner_user_id"] == my_user_id) & (contacts_df["user_id"] == uid)) | (
         (contacts_df["owner_user_id"] == uid) & (contacts_df["user_id"] == my_user_id)
     )
@@ -171,7 +153,7 @@ def first_exchange(uid: str) -> Optional[pd.Timestamp]:
     return s.min() if not s.empty else None
 
 
-def path_details(path: List[str]) -> Tuple[pd.DataFrame, str]:
+def path_details(path: list[str]) -> tuple[pd.DataFrame, str]:
     rows = []
     for i, uid in enumerate(path):
         info = user_info[uid]
