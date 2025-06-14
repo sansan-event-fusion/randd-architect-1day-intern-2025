@@ -1,9 +1,11 @@
+import os
+
 import streamlit as st
-from dotenv import load_dotenv
 
 from app.views import dashboard_view, search_view
 
-load_dotenv()
+os.environ["BASE_URL"] = "https://circuit-trial.stg.rd.ds.sansan.com"
+os.environ["OWN_COMPANY_ID"] = "6185710340"
 
 st.set_page_config(
     page_title="企業間つながり分析検索ツール",
