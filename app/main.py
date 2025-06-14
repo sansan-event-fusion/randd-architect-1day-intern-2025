@@ -56,4 +56,4 @@ if st.button("送信"):
                 contact_user_id = df_contact_each_user["user_id"].tolist()
                 for j in contact_user_id:
                     user_for_each = df[df["user_id"] == j]
-                    st.write(user_for_each)
+                    # st.write(user_for_each)
