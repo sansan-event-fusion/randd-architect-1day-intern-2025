@@ -1,5 +1,10 @@
+import sys
+from pathlib import Path
+
 import streamlit as st
 from components import display_business_cards, display_contact_history
+
+sys.path.append(str(Path(__file__).parent.parent))
 
 
 def main() -> None:

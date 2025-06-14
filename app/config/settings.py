@@ -2,8 +2,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-from pydantic import ConfigDict
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # internal imports
 
@@ -22,10 +21,9 @@ class Settings(BaseSettings):
     DATA_DIR: Path = ROOT_DIR / "data"
     API_BASE_URL: str = "https://circuit-trial.stg.rd.ds.sansan.com/api"
 
-    model_config = ConfigDict(
+    model_config = SettingsConfigDict(
         env_file=str(ROOT_DIR / ".env"),
         case_sensitive=False,
-        secrets_dir=None,
     )
 
 

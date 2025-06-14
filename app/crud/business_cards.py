@@ -5,12 +5,7 @@ from .models import BusinessCardResponse, SimilarBusinessCardResponse
 
 class BusinessCardCRUD:
     def __init__(self):
-        try:
-            # テスト実行時のabsolute import
-            from app.config import get_settings
-        except ImportError:
-            # Streamlit実行時のrelative import
-            from config import get_settings
+        from app.config import get_settings
 
         self.base_url = get_settings().API_BASE_URL
 

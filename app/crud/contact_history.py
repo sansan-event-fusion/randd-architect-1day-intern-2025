@@ -7,12 +7,7 @@ from .models import ContactHistoryResponse
 
 class ContactHistoryCRUD:
     def __init__(self):
-        try:
-            # テスト実行時のabsolute import
-            from app.config import get_settings
-        except ImportError:
-            # Streamlit実行時のrelative import
-            from config import get_settings
+        from app.config.settings import get_settings
 
         self.base_url = get_settings().API_BASE_URL
 
@@ -24,7 +19,7 @@ class ContactHistoryCRUD:
         end_date: datetime | None = None,
     ) -> list[ContactHistoryResponse]:
         """Get all contact histories with pagination and optional date filtering."""
-        params = {"offset": offset, "limit": limit}
+        params: dict[str, str | int] = {"offset": offset, "limit": limit}
         if start_date:
             params["start_date"] = start_date.isoformat()
         if end_date:
@@ -40,7 +35,7 @@ class ContactHistoryCRUD:
         end_date: datetime | None = None,
     ) -> int:
         """Get total count of contact histories with optional date filtering."""
-        params = {}
+        params: dict[str, str] = {}
         if start_date:
             params["start_date"] = start_date.isoformat()
         if end_date:
@@ -59,7 +54,7 @@ class ContactHistoryCRUD:
         end_date: datetime | None = None,
     ) -> list[ContactHistoryResponse]:
         """Get contact histories by owner user ID."""
-        params = {"offset": offset, "limit": limit}
+        params: dict[str, str | int] = {"offset": offset, "limit": limit}
         if start_date:
             params["start_date"] = start_date.isoformat()
         if end_date:
@@ -82,7 +77,7 @@ class ContactHistoryCRUD:
         end_date: datetime | None = None,
     ) -> list[ContactHistoryResponse]:
         """Get contact histories by owner company ID."""
-        params = {"offset": offset, "limit": limit}
+        params: dict[str, str | int] = {"offset": offset, "limit": limit}
         if start_date:
             params["start_date"] = start_date.isoformat()
         if end_date:
