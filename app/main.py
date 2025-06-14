@@ -1,5 +1,4 @@
 from pathlib import Path
-
 import pandas as pd
 import streamlit as st
 from collections import Counter
@@ -8,14 +7,9 @@ from datetime import datetime, timedelta, date
 import matplotlib.pyplot as plt
 import calendar
 import re
-# import japanize_matplotlib
 import matplotlib_fontja
-# import 
-# タイトル
-st.title("名刺情報の概要")
 
-path = Path(__file__).parent / "dummy_data.csv"
-df_dummy = pd.read_csv(path, dtype=str)
+st.title("名刺情報の概要")
 
 # １ヶ月ごとの日付を生成する函数
 def weekly_date_range(start_date, end_date):
@@ -147,11 +141,8 @@ for card in cards_list:
         company_id2name[card["company_id"]] = card["company_name"]
     if card["company_id"] not in company_id2address:
         company_id2address[card["company_id"]] = card["address"]
-    # card["company_name"] = company_id2name[card["company_id"]]
 
 cards_df = pd.DataFrame(cards_list)
-# print(cards_df.columns)
-# st.write("検索機能")
 st.dataframe(cards_df)
 
 # 会社ごとの出現順位
@@ -180,27 +171,21 @@ if submitted_trending:
     else:
         contacts_count = get_contacts_count(start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"))
         st.write(f"{start_date}から{end_date}までの名刺交換数: {contacts_count}")
-        # plot_contacts_count_graph_by_week(start_date, end_date)
         plot_contacts_count_graph_by_month(start_date, end_date)
-        # print("週ごとの名刺交換数:", plot_contacts_count_graph_by_week(start_date, end_date))
-# st.write(get_contacts_count("2020-01-01", "2023-12-31"))
 
 st.write("県ごとのつながり（500件以上のものは500とする）")
 contacts_data = get_contacts_data(offset=0, limit=get_contacts_data_len())
-# contact_count_df = 
 if contacts_data:
     contacts_df = pd.DataFrame(contacts_data)
     owner_prefecture_list = []
     prefecture_list = []
     for idx, row in contacts_df.iterrows():
-        # owner_prefecture_list = company_id2address[contacts_df["owner_company_id"]].apply(extract_prefecture)
         owner_prefecture_list.append(extract_prefecture(company_id2address[row["owner_company_id"]]))
         prefecture_list.append(extract_prefecture(company_id2address[row["company_id"]]))
     count_df = pd.DataFrame({
         "owner_prefecture": owner_prefecture_list,
         "prefecture": prefecture_list
     })
-    # st.dataframe(count_df)
     
     pivot = count_df.groupby(["owner_prefecture","prefecture"]).size().unstack(fill_value=0)
     pivot.clip(upper=500, inplace=True)  # 上限を500に設定
@@ -213,12 +198,5 @@ if contacts_data:
     ax.set_xticklabels(pivot.columns, rotation=45, ha="right",fontsize=5)
     ax.set_yticks(range(len(pivot.index)))
     ax.set_yticklabels(pivot.index,fontsize=5)
-
-    # 各セルに数値をアノテーション
-    # for i in range(pivot.shape[0]):
-    #     for j in range(pivot.shape[1]):
-    #         ax.text(j, i, pivot.iat[i, j], ha="center", va="center", color="w")
-
-    # ax.set_title("")
     fig.colorbar(im, ax=ax, label="交換回数")
     st.pyplot(fig)
