@@ -7,7 +7,7 @@ from .models import ContactHistoryResponse
 
 class ContactHistoryCRUD:
     def __init__(self):
-        from app.config.settings import get_settings
+        from config.settings import get_settings
 
         self.base_url = get_settings().API_BASE_URL
 
