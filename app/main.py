@@ -81,6 +81,7 @@ elif page == "名刺交換履歴アプリ":
 
     else:
         st.error(
-            f"APIリクエストに失敗しました。ステータスコード: {cards_response.status_code}, {contacts_response.status_code}"
+            f"APIリクエストに失敗しました。ステータスコード: "
+            f"{cards_response.status_code}, {contacts_response.status_code}"
         )
         st.error("詳細: " + cards_response.text + contacts_response.text)
