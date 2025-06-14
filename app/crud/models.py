@@ -4,8 +4,8 @@ from pydantic import BaseModel
 
 
 class BusinessCardResponse(BaseModel):
-    user_id: int
-    company_id: int
+    user_id: str
+    company_id: str
     full_name: str
     company_name: str
     address: str
@@ -13,8 +13,8 @@ class BusinessCardResponse(BaseModel):
 
 
 class SimilarBusinessCardResponse(BaseModel):
-    user_id: int
-    company_id: int
+    user_id: str
+    company_id: str
     full_name: str
     company_name: str
     address: str
@@ -23,11 +23,20 @@ class SimilarBusinessCardResponse(BaseModel):
 
 
 class ContactHistoryResponse(BaseModel):
-    contact_id: int
-    owner_user_id: int
-    target_user_id: int
-    contact_datetime: datetime
-    owner_company_id: int
-    target_company_id: int
-    contact_type: str
-    notes: str | None = None
+    owner_user_id: str
+    owner_company_id: str
+    user_id: str
+    company_id: str
+    created_at: datetime
+
+    @property
+    def target_user_id(self) -> str:
+        return self.user_id
+
+    @property
+    def target_company_id(self) -> str:
+        return self.company_id
+
+    @property
+    def contact_datetime(self) -> datetime:
+        return self.created_at

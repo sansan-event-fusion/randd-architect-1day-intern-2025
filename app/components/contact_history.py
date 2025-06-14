@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
-from crud import ContactHistoryCRUD
+
+from app.crud import ContactHistoryCRUD
 
 
 def display_contact_history() -> None:

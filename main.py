@@ -1,26 +1,25 @@
 # external imports
 
-import sys
-from pathlib import Path
 
 import streamlit as st
 
 # internal imports
-from components import display_business_cards, display_contact_history
-
-sys.path.append(str(Path(__file__).parent.parent))
+from app.components import display_analytics_dashboard, display_business_cards, display_contact_history
 
 
-def main() -> None:
-    st.title("名刺・交換履歴管理アプリ v2")
+def main() -> None:  # noqa: C901
+    """名刺・交換履歴管理アプリ"""
+    st.title("名刺・交換履歴管理アプリ")
 
     # サイドバーでデータ選択
-    data_type = st.sidebar.selectbox("表示するデータを選択", ["名刺データ", "交換履歴"])
+    data_type = st.sidebar.selectbox("表示するデータを選択", ["📊 アナリティクス", "👤 名刺データ", "📋 交換履歴"])
 
     try:
-        if data_type == "名刺データ":
+        if data_type == "📊 アナリティクス":
+            display_analytics_dashboard()
+        elif data_type == "👤 名刺データ":
             display_business_cards()
-        elif data_type == "交換履歴":
+        elif data_type == "📋 交換履歴":
             display_contact_history()
 
     except (ConnectionError, TimeoutError) as e:

@@ -1,6 +1,7 @@
 import pandas as pd
 import streamlit as st
-from crud import BusinessCardCRUD
+
+from app.crud import BusinessCardCRUD
 
 
 def display_business_cards() -> None:
