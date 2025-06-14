@@ -1,12 +1,9 @@
 from typing import Any
-import math
 
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import requests
 import streamlit as st
-from datetime import datetime, date
 
 # タイトル
 st.title("Cards & Contacts Data Viewer")
@@ -26,31 +23,8 @@ if "current_page" not in st.session_state:
 if "total_count" not in st.session_state:
     st.session_state.total_count = 0
 
-# カウント取得関数
-@st.cache_data
-def fetch_count(base_url: str, endpoint: str) -> int | None:
-    url = f"{base_url}/api/{endpoint}/count"
-    headers = {"accept": "application/json"}
-
-    try:
-        response = requests.get(url, headers=headers, timeout=120)
-        response.raise_for_status()
-        result = response.json()
-        print(type(result), result) #debug
-        # APIの返り値がint型の場合とdictの場合を両方対応
-        if isinstance(result, int):
-            return result
-        elif isinstance(result, dict) and "count" in result:
-            return result["count"]
-        else:
-            st.error(f"Unexpected count API response format: {result}")
-            return None
-    except requests.exceptions.RequestException as e:
-        st.error(f"Count API request failed: {e}")
-        return None
-
 # データ取得関数
-# @st.cache_data
+@st.cache_data
 def fetch_data(base_url: str, endpoint: str, offset: int = 0, limit: int = 50) -> dict[str, Any] | None:
     url = f"{base_url}/api/{endpoint}/"
     params = {"offset": offset, "limit": limit}
@@ -69,16 +43,7 @@ def fetch_data(base_url: str, endpoint: str, offset: int = 0, limit: int = 50) -
 def fetch_all_data(base_url: str, endpoint: str) -> pd.DataFrame:
     all_data: list[dict[str, Any]] = []
     offset = 0
-
-    # カウントAPIでデータ総数を取得
-    total_count = fetch_count(base_url, endpoint)
-    st.text("total_count: " + str(total_count))
-    if total_count is None:
-        st.warning(f"{endpoint} の総数を取得できませんでした。デフォルトの100件ずつで取得します。")
-        limit = 1000
-    else:
-        limit = 1000  # 一度に最大1000件まで
-        st.info(f"{endpoint} の総数: {total_count}件")
+    limit = 1000
 
     progress_bar = st.progress(0)
     status_text = st.empty()
@@ -110,10 +75,7 @@ def fetch_all_data(base_url: str, endpoint: str) -> pd.DataFrame:
             break
 
         offset += limit
-        if total_count and total_count > 0:
-            progress_bar.progress(min(len(all_data) / total_count, 1.0))
-        else:
-            progress_bar.progress(min(offset / 1000, 1.0))
+        progress_bar.progress(min(offset / 1000, 1.0))
 
     progress_bar.empty()
     status_text.empty()
@@ -229,40 +191,16 @@ if not st.session_state.merged_data.empty:
     # 現在のページのデータを表示
     current_page_data = display_paginated_data(st.session_state.merged_data, st.session_state.current_page)
 
-    # カラム名の日本語マッピング
-    column_rename_map = {
-        "user_id": "名刺(id)",
-        "full_name": "名刺(名前)",
-        "company_name": "名刺(企業名)",
-        "position": "名刺(役職)",
-        "owner_user_id": "名刺をもらった人(id)",
-        "owner_full_name": "名刺をもらった人(名前)",
-        "owner_company_name": "名刺をもらった人(企業名)",
-        "owner_position": "名刺をもらった人(役職)"
-    }
-
-    # 表示カラムの選択(日本語名で表示)
+    # 表示カラムの選択
     all_columns = st.session_state.merged_data.columns.tolist()
-    all_columns_japanese = [column_rename_map.get(col, col) for col in all_columns]
-    default_cols = ["user_id", "full_name", "company_name", "position", 
-                   "owner_user_id", "owner_full_name", "owner_company_name", "owner_position"]
-    default_columns_japanese = [column_rename_map.get(col, col) for col in default_cols]
-
-    selected_columns_japanese: list[str] = st.multiselect(
+    selected_columns: list[str] = st.multiselect(
         "表示するカラムを選択",
-        all_columns_japanese,
-        default=default_columns_japanese
+        all_columns,
+        default=["user_id", "full_name", "company_name", "position",
+                "owner_user_id", "owner_full_name", "owner_company_name", "owner_position"]
     )
 
-    # 日本語名から元のカラム名に戻す
-    reverse_rename_map = {v: k for k, v in column_rename_map.items()}
-    selected_columns = [reverse_rename_map.get(col, col) for col in selected_columns_japanese]
-
-    display_data = (current_page_data[selected_columns].copy() 
-                   if selected_columns else current_page_data.copy())
-
-    # 表示用にカラム名を日本語に変更
-    display_data = display_data.rename(columns=column_rename_map)
+    display_data = current_page_data[selected_columns] if selected_columns else current_page_data
 
     st.dataframe(display_data, use_container_width=True)
 
