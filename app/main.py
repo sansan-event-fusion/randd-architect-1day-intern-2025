@@ -1,246 +1,230 @@
+# -*- coding: utf-8 -*-
 """
-みちび君 — 人脈ナビゲーションツール
-(親密度 + 電話 + 役職 + 名刺交換日／経過日数)
+みちび君
+――― 最短ルートで “ご縁” をナビゲート！ ―――
+2025-06-14
 ------------------------------------------------------------
-NEW (2025-06-14)
-  • 「連絡したい相手」を役職でも選択可
-  • 役職を指定した場合、その役職に該当する“全員分”の最短パスを一覧表示
+✓ あなたのプロフィールは初回選択 → セッション保存
+✓ 連絡したい相手を企業・役職で絞込み
+✓ 人脈グラフから最短パス＋親密度（強≥10 / 普4-9 / 弱≤3）
+✓ 名刺交換日＋経過日数を統合表示「YYYY-MM-DD（N日経過）」
+✓ UID 列を非表示、CSV ダウンロード可
 ------------------------------------------------------------
 """
 
 # ------------------------------------------------------------
-# Imports
+# Imports & basic config
 # ------------------------------------------------------------
 import os
-from concurrent.futures import ThreadPoolExecutor
 from datetime import date
+from concurrent.futures import ThreadPoolExecutor
+from typing import Dict, List, Optional, Tuple
 
-import networkx as nx
 import pandas as pd
+import networkx as nx
 import requests
 import streamlit as st
 from requests.adapters import HTTPAdapter, Retry
 
-# ------------------------------------------------------------
-# Page config
-# ------------------------------------------------------------
 st.set_page_config(
-    page_title="みちび君 | 人脈ナビゲーションツール",
+    page_title="みちび君 | 人脈ナビゲーション",
     layout="wide",
     initial_sidebar_state="expanded",
 )
-st.title("🤖 みちび君")
+st.markdown("# 🚀 みちび君\n### 最短ルートで “ご縁” をナビゲート！")
 
 # ------------------------------------------------------------
-# Constants & session
+# Constants & HTTP
 # ------------------------------------------------------------
 BASE_URL = "https://circuit-trial.stg.rd.ds.sansan.com/api"
 CARDS_ENDPOINT = f"{BASE_URL}/cards/"
 CONTACTS_ENDPOINT = f"{BASE_URL}/contacts/"
-DEFAULT_LIMIT = 100
+LIMIT = 100
 TIMEOUT = int(os.getenv("API_TIMEOUT", "30"))
-TODAY = pd.Timestamp(date.today())  # tz-naive
+TODAY = pd.Timestamp(date.today())
 
-_session = requests.Session()
-_session.mount("https://", HTTPAdapter(max_retries=Retry(total=3, backoff_factor=1.5)))
-_executor = ThreadPoolExecutor(max_workers=2)
+sess = requests.Session()
+sess.mount("https://", HTTPAdapter(max_retries=Retry(total=3, backoff_factor=1.5)))
+pool = ThreadPoolExecutor(max_workers=2)
 
 
 # ------------------------------------------------------------
-# Helper functions
+# Utils
 # ------------------------------------------------------------
-@st.cache_data(ttl=3600, max_entries=20)
-def fetch_all(endpoint: str) -> pd.DataFrame:
-    rows, off = [], 0
+@st.cache_data(ttl=3600)
+def fetch_all(url: str) -> pd.DataFrame:
+    data, off = [], 0
     while True:
-        r = _session.get(endpoint, params={"limit": DEFAULT_LIMIT, "offset": off}, timeout=TIMEOUT)
+        r = sess.get(url, params={"limit": LIMIT, "offset": off}, timeout=TIMEOUT)
         r.raise_for_status()
         if not (chunk := r.json()):
             break
-        rows.extend(chunk)
-        off += DEFAULT_LIMIT
-    return pd.DataFrame(rows)
+        data.extend(chunk)
+        off += LIMIT
+    return pd.DataFrame(data)
 
 
-@st.cache_data(ttl=3600, max_entries=20)
-def read_csv_async(f) -> pd.DataFrame:
-    return pd.read_csv(f)
-
-
-def acquire(endpoint: str, label: str) -> pd.DataFrame:
-    with st.spinner(f"{label} を取得中…"):
-        try:
-            return fetch_all(endpoint)
-        except Exception as e:
-            up = st.sidebar.file_uploader(f"{label} CSV をアップロード", type="csv")
-            if up:
-                return _executor.submit(read_csv_async, up).result()
-            st.error(f"{label} の取得に失敗しました: {e}")
-            st.stop()
-
-
-def badge(text: str, color: str) -> str:
+def badge(txt: str, color: str) -> str:
     return (
-        f'<span style="background:{color};color:#fff;padding:2px 6px;border-radius:6px;font-weight:bold;">{text}</span>'
+        f'<span style="background:{color};color:#fff;padding:2px 6px;border-radius:6px;font-weight:bold;">{txt}</span>'
     )
 
 
-def intimacy_label(w: int, max_w: int) -> str:
-    r = w / max_w if max_w else 0
-    return "強" if r >= 0.7 else ("普" if r >= 0.4 else "弱")
+def intimacy(weight: int) -> str:
+    return "強" if weight >= 10 else ("普" if weight >= 4 else "弱")
 
 
 # ------------------------------------------------------------
-# Load data
+# Data load
 # ------------------------------------------------------------
-cards_df = acquire(CARDS_ENDPOINT, "名刺データ")
-contacts_df = acquire(CONTACTS_ENDPOINT, "名刺交換履歴")
-st.success(f"名刺 {len(cards_df):,} 件 / 交換履歴 {len(contacts_df):,} 件 取得")
-
-# ---- key columns
-PHONE_COL = "phone_number" if "phone_number" in cards_df.columns else None
-POSITION_COL = "position" if "position" in cards_df.columns else None
-
-cols = ["full_name", "company_name"]
-for c in [PHONE_COL, POSITION_COL]:
-    if c:
-        cols.append(c)
-
-user_info: dict[str, dict[str, str]] = cards_df.set_index("user_id")[cols].fillna("").to_dict("index")
-all_companies: list[str] = sorted(cards_df["company_name"].dropna().unique().tolist())
-
-# contacts preprocessing (tz → naive)
+cards_df = fetch_all(CARDS_ENDPOINT)
+contacts_df = fetch_all(CONTACTS_ENDPOINT)
 contacts_df["created_at"] = pd.to_datetime(contacts_df["created_at"], errors="coerce").dt.tz_localize(None)
 
-# ------------------------------------------------------------
-# Sidebar UI
-# ------------------------------------------------------------
-st.sidebar.subheader("みちび君の設定")
+PHONE_COL = next((c for c in cards_df.columns if "phone" in c.lower()), None)
+POSITION_COL = next((c for c in cards_df.columns if c.lower() in ("position", "title", "役職")), None)
 
-# あなた選択
-st.sidebar.write("### 🧑‍💼 あなた")
-my_company = st.sidebar.selectbox("所属企業", options=all_companies)
-my_candidates = cards_df.query("company_name == @my_company and full_name.notna()")
-my_user_id: str = st.sidebar.selectbox(
-    "あなたの名前",
-    options=my_candidates["user_id"].tolist(),
-    format_func=lambda x: user_info[x]["full_name"],
+BASE_COLS = (
+    ["full_name", "company_name"] + ([PHONE_COL] if PHONE_COL else []) + ([POSITION_COL] if POSITION_COL else [])
 )
-st.sidebar.info(f"あなた: {user_info[my_user_id]['full_name']} ({my_company})")
+user_info: Dict[str, Dict[str, str]] = cards_df.set_index("user_id")[BASE_COLS].fillna("").to_dict("index")
+companies = sorted(cards_df["company_name"].dropna().unique().tolist())
 
-# 相手会社 & 役職フィルタ
-st.sidebar.write("### 📞 連絡したい相手")
-tg_company = st.sidebar.selectbox("相手の所属企業", options=all_companies)
-
-# 役職フィルタ（オプション）
-pos_options = []
-if POSITION_COL:
-    pos_options = sorted(cards_df.loc[cards_df["company_name"] == tg_company, POSITION_COL].dropna().unique())
-select_role = None
-if pos_options:
-    select_role = st.sidebar.selectbox("役職で絞り込む (任意)", options=["(指定なし)"] + pos_options)
-
-# 相手ユーザー選択（役職フィルタがない or 指定なしの場合のみ）
-if not pos_options or select_role == "(指定なし)":
-    tg_candidates = cards_df.query("company_name == @tg_company and full_name.notna()")
-    tg_user_id: str = st.sidebar.selectbox(
-        "相手の名前",
-        options=tg_candidates["user_id"].tolist(),
+# ------------------------------------------------------------
+# Step 1: あなたを session_state に保存
+# ------------------------------------------------------------
+if "my_user_id" not in st.session_state:
+    st.sidebar.markdown("### 🧑‍💼 あなたのプロフィール設定")
+    my_company = st.sidebar.selectbox("所属企業", options=companies, key="sel_my_company")
+    my_candidates = cards_df.query("company_name == @my_company and full_name.notna()")
+    my_user_id = st.sidebar.selectbox(
+        "あなたの名前",
+        options=my_candidates["user_id"],
         format_func=lambda x: user_info[x]["full_name"],
+        key="sel_my_user",
     )
-    target_user_ids = [tg_user_id]
-else:
-    # 役職が指定された場合：該当者全員
-    target_user_ids = cards_df.query("company_name == @tg_company and position == @select_role and full_name.notna()")[
-        "user_id"
-    ].tolist()
-    st.sidebar.info(f"役職 '{select_role}' の該当者 {len(target_user_ids)} 名")
+    if st.sidebar.button("確定して次へ ▶️"):
+        st.session_state["my_user_id"] = my_user_id
+        st.session_state["my_company"] = my_company
+        st.rerun()
+    st.stop()  # プロフィール未確定の間はここで終了
+
+# プロフィール確定後ここに来る
+my_user_id = st.session_state["my_user_id"]
+my_company = st.session_state["my_company"]
+profile = user_info[my_user_id]
+st.sidebar.markdown("### 📌 あなたのプロフィール")
+st.sidebar.success(f"{profile['full_name']} ({my_company})")
 
 # ------------------------------------------------------------
-# Validate
+# Step 2: ターゲット設定
 # ------------------------------------------------------------
-if my_user_id in target_user_ids:
-    st.warning("自分と相手が同じユーザーを含んでいます。除外します。")
-    target_user_ids = [uid for uid in target_user_ids if uid != my_user_id]
-if not target_user_ids:
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 🎯 連絡したい相手を選択")
+
+tg_company = st.sidebar.selectbox("相手企業", options=companies, key="sel_tg_company")
+role_opts = (
+    sorted(cards_df.query("company_name == @tg_company")[POSITION_COL].dropna().unique()) if POSITION_COL else []
+)
+role_choice = st.sidebar.selectbox("役職フィルタ (任意)", ["(指定なし)"] + role_opts, key="sel_role")
+
+if role_choice != "(指定なし)":
+    tgt_df = cards_df.query("company_name == @tg_company and position == @role_choice and full_name.notna()")
+    target_ids = tgt_df["user_id"].tolist()
+    st.sidebar.info(f"該当者 {len(target_ids)} 名")
+else:
+    cand = cards_df.query("company_name == @tg_company and full_name.notna()")
+    sel_id = st.sidebar.selectbox(
+        "相手の名前", cand["user_id"], format_func=lambda x: user_info[x]["full_name"], key="sel_tg_user"
+    )
+    target_ids = [sel_id]
+
+# 自分除外
+target_ids = [uid for uid in target_ids if uid != my_user_id]
+if not target_ids:
+    st.info("サイドバーで相手を選択してください。")
     st.stop()
 
 # ------------------------------------------------------------
-# Build graph once
+# Graph build
 # ------------------------------------------------------------
 G = nx.Graph()
-for _, r in contacts_df.iterrows():
-    a, b = r["owner_user_id"], r["user_id"]
+for _, row in contacts_df.iterrows():
+    a, b = row["owner_user_id"], row["user_id"]
     if a and b and a != b:
         G.add_edge(a, b, weight=G[a][b]["weight"] + 1 if G.has_edge(a, b) else 1)
 
 
-# ------------------------------------------------------------
-# Helper: first exchange date
-# ------------------------------------------------------------
-def first_exchange(uid: str) -> pd.Timestamp | None:
-    filt = ((contacts_df["owner_user_id"] == my_user_id) & (contacts_df["user_id"] == uid)) | (
-        (contacts_df["owner_user_id"] == uid) & (contacts_df["user_id"] == my_user_id)
+def exchange_between(uid1: str, uid2: str) -> Optional[pd.Timestamp]:
+    m = ((contacts_df["owner_user_id"] == uid1) & (contacts_df["user_id"] == uid2)) | (
+        (contacts_df["owner_user_id"] == uid2) & (contacts_df["user_id"] == uid1)
     )
-    s = contacts_df.loc[filt, "created_at"].dropna()
+    s = contacts_df.loc[m, "created_at"].dropna()
     return s.min() if not s.empty else None
 
 
-# ------------------------------------------------------------
-# Path calculation & display
-# ------------------------------------------------------------
-def build_path_df(path: list[str]) -> tuple[pd.DataFrame, str]:
-    # max weight for intimacy scaling
-    ws = [G[path[i]][path[i + 1]]["weight"] for i in range(len(path) - 1)] if len(path) > 1 else []
-    max_w = max(ws) if ws else 1
+def first_exchange(uid: str) -> Optional[pd.Timestamp]:
+    m = ((contacts_df["owner_user_id"] == my_user_id) & (contacts_df["user_id"] == uid)) | (
+        (contacts_df["owner_user_id"] == uid) & (contacts_df["user_id"] == my_user_id)
+    )
+    s = contacts_df.loc[m, "created_at"].dropna()
+    return s.min() if not s.empty else None
 
+
+def path_details(path: List[str]) -> Tuple[pd.DataFrame, str]:
     rows = []
     for i, uid in enumerate(path):
-        info = user_info.get(uid, {})
-        exch = first_exchange(uid)
+        info = user_info[uid]
+
+        # --- 交換日: 先頭ノード以外は「前ノード」との最初の交換日を表示
+        exch = exchange_between(path[i - 1], uid) if i > 0 else None
+        date_disp = f"{exch:%Y-%m-%d}（{(TODAY - exch).days}日経過）" if exch is not None else ""
+
         rows.append(
             {
-                "ユーザーID": uid,
-                "氏名": info.get("full_name", "不明"),
-                "会社": info.get("company_name", "不明"),
+                "氏名": info["full_name"],
+                "会社": info["company_name"],
                 "役職": info.get(POSITION_COL, "") if POSITION_COL else "",
                 "電話": info.get(PHONE_COL, "") if PHONE_COL else "",
-                "名刺交換日": exch.strftime("%Y-%m-%d") if exch is not None else "",
-                "交換からの日数": (TODAY - exch).days if exch is not None else "",
-                "親密度": intimacy_label(G[uid][path[i + 1]]["weight"], max_w) if i < len(path) - 1 else "",
+                "名刺交換": date_disp,
+                "親密度": intimacy(G[uid][path[i + 1]]["weight"]) if i < len(path) - 1 else "",
             }
         )
+
     df = pd.DataFrame(rows)
 
-    # badge path
-    b_list = []
+    # --- バッジ付きルート文字列
+    badges = []
     for uid in path:
-        name = user_info.get(uid, {}).get("full_name", uid)
+        name = user_info[uid]["full_name"]
         if uid == my_user_id:
-            b_list.append(badge(name, "#3b82f6"))
-        elif uid in target_user_ids:
-            b_list.append(badge(name, "#ef4444"))
+            badges.append(badge(name, "#3b82f6"))
+        elif uid in target_ids:
+            badges.append(badge(name, "#ef4444"))
         else:
-            b_list.append(badge(name, "#f59e0b"))
-    arrow_html = " ➡️ ".join(b_list)
-    return df, arrow_html
+            badges.append(badge(name, "#f59e0b"))
+    return df, " ➡️ ".join(badges)
 
 
-# --- Iterate over targets -----------------------------------
-for tgt in target_user_ids:
+# ------------------------------------------------------------
+# Display paths
+# ------------------------------------------------------------
+for tgt in target_ids:
     try:
-        path_nodes = nx.shortest_path(G, my_user_id, tgt)
+        p_nodes = nx.shortest_path(G, my_user_id, tgt)
     except nx.NetworkXNoPath:
-        st.error(f"❌ {user_info[tgt]['full_name']} とのパスは見つかりませんでした。")
+        st.error(f"❌ {user_info[tgt]['full_name']} との経路は見つかりません。")
         continue
 
-    df, arrow_html = build_path_df(path_nodes)
-
+    df, route_html = path_details(p_nodes)
     with st.expander(
-        f"📍 {user_info[tgt]['full_name']} へのルート（{len(path_nodes) - 1} ホップ）",
-        expanded=len(target_user_ids) == 1,
+        f"📍 {user_info[tgt]['full_name']} へのルート（{len(p_nodes) - 1} ホップ）", expanded=len(target_ids) == 1
     ):
-        st.markdown(arrow_html, unsafe_allow_html=True)
+        st.markdown(route_html, unsafe_allow_html=True)
         st.table(df)
-        dl = df.to_csv(index=False).encode("utf-8-sig")
-        st.download_button("CSV ダウンロード", dl, file_name=f"michibikun_path_{tgt}.csv", mime="text/csv")
+        st.download_button(
+            "CSV ダウンロード",
+            data=df.to_csv(index=False).encode("utf-8-sig"),
+            file_name=f"michibikun_{tgt}.csv",
+            mime="text/csv",
+        )
