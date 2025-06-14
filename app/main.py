@@ -3,7 +3,6 @@ import pandas as pd
 
 import streamlit as st
 from typing import Optional
-# タイトル
 st.title("サンプルアプリ")
 
 def fetch_api_data(url: str) -> pd.DataFrame:
