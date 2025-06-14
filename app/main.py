@@ -15,7 +15,7 @@ def fetch_api_data(url: str) -> pd.DataFrame:
     except requests.exceptions.RequestException as e:
         st.error(f"API呼び出しエラー: {e}")
 
-def get_user_id_from_full_name(full_name: str) -> Optional[str]:
+def get_user_id_from_full_name(full_name: str) -> str | None:
     """氏名からuser_idを取得"""
     try:
         df = fetch_api_data("https://circuit-trial.stg.rd.ds.sansan.com/api/cards/")
