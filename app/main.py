@@ -150,7 +150,7 @@ partner_df['cluster'] = kmeans.predict(X2)
 
 # クラスタ（業種）ごとに取引件数を集計
 trade_cnt = (
-    partner_df.groupby('cluster')
+    partner_df.groupby("cluster")
     .size()
     .reset_index(name='count')
 )
