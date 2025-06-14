@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 みちび君 — 人脈ナビゲーションツール
 (親密度 + 電話 + 役職 + 名刺交換日／経過日数)
@@ -15,7 +14,6 @@ NEW (2025-06-14)
 import os
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
-from typing import Dict, List, Optional, Tuple
 
 import networkx as nx
 import pandas as pd
@@ -108,8 +106,8 @@ for c in [PHONE_COL, POSITION_COL]:
     if c:
         cols.append(c)
 
-user_info: Dict[str, Dict[str, str]] = cards_df.set_index("user_id")[cols].fillna("").to_dict("index")
-all_companies: List[str] = sorted(cards_df["company_name"].dropna().unique().tolist())
+user_info: dict[str, dict[str, str]] = cards_df.set_index("user_id")[cols].fillna("").to_dict("index")
+all_companies: list[str] = sorted(cards_df["company_name"].dropna().unique().tolist())
 
 # contacts preprocessing (tz → naive)
 contacts_df["created_at"] = pd.to_datetime(contacts_df["created_at"], errors="coerce").dt.tz_localize(None)
@@ -123,7 +121,7 @@ st.sidebar.subheader("みちび君の設定")
 st.sidebar.write("### 🧑‍💼 あなた")
 my_company = st.sidebar.selectbox("所属企業", options=all_companies)
 my_candidates = cards_df.query("company_name == @my_company and full_name.notna()")
-my_user_id = st.sidebar.selectbox(
+my_user_id: str = st.sidebar.selectbox(
     "あなたの名前",
     options=my_candidates["user_id"].tolist(),
     format_func=lambda x: user_info[x]["full_name"],
@@ -145,7 +143,7 @@ if pos_options:
 # 相手ユーザー選択（役職フィルタがない or 指定なしの場合のみ）
 if not pos_options or select_role == "(指定なし)":
     tg_candidates = cards_df.query("company_name == @tg_company and full_name.notna()")
-    tg_user_id = st.sidebar.selectbox(
+    tg_user_id: str = st.sidebar.selectbox(
         "相手の名前",
         options=tg_candidates["user_id"].tolist(),
         format_func=lambda x: user_info[x]["full_name"],
@@ -180,7 +178,7 @@ for _, r in contacts_df.iterrows():
 # ------------------------------------------------------------
 # Helper: first exchange date
 # ------------------------------------------------------------
-def first_exchange(uid: str) -> Optional[pd.Timestamp]:
+def first_exchange(uid: str) -> pd.Timestamp | None:
     filt = ((contacts_df["owner_user_id"] == my_user_id) & (contacts_df["user_id"] == uid)) | (
         (contacts_df["owner_user_id"] == uid) & (contacts_df["user_id"] == my_user_id)
     )
@@ -191,7 +189,7 @@ def first_exchange(uid: str) -> Optional[pd.Timestamp]:
 # ------------------------------------------------------------
 # Path calculation & display
 # ------------------------------------------------------------
-def build_path_df(path: List[str]) -> Tuple[pd.DataFrame, str]:
+def build_path_df(path: list[str]) -> tuple[pd.DataFrame, str]:
     # max weight for intimacy scaling
     ws = [G[path[i]][path[i + 1]]["weight"] for i in range(len(path) - 1)] if len(path) > 1 else []
     max_w = max(ws) if ws else 1
