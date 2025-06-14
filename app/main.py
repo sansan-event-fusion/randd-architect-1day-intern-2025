@@ -116,8 +116,8 @@ df["clean_name"] = (
 )
 
 # ベクトル化とクラスタリング
-vectorizer = TfidfVectorizer(analyzer='char_wb', ngram_range=(3,6), max_features=2000)
-X          = vectorizer.fit_transform(df['clean_name'])
+vectorizer = TfidfVectorizer(analyzer="char_wb", ngram_range=(3,6), max_features=2000)
+X          = vectorizer.fit_transform(df["clean_name"])
 n_clusters = st.sidebar.slider("クラスタ数（業種数）", 2, 10, 5)
 kmeans     = KMeans(n_clusters=n_clusters, random_state=42).fit(X)
 df['cluster'] = kmeans.labels_
