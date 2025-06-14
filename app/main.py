@@ -109,9 +109,9 @@ resp = requests.get(API_URL, params={"offset":0,"limit":10000}, headers=HEADERS)
 df   = pd.DataFrame(resp.json())
 
 # 会社名前処理
-df['clean_name'] = (
-    df['company_name']
-      .str.replace(r'(株式会社|有限会社|合同会社|（.*?）)', '', regex=True)
+df["clean_name"] = (
+    df["company_name"]
+      .str.replace(r"(株式会社|有限会社|合同会社|（.*?）)", "", regex=True)
       .str.strip()
 )
 
