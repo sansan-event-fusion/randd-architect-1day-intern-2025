@@ -1,13 +1,12 @@
-from pathlib import Path
-
 import streamlit as st
+from pathlib import Path
 
 from app.models.company import Company
 from app.util import contains_japanese_match
 
 
 def get_all_companies():
-    with Path.open("app/data/companies.csv") as f:
+    with Path.open("app/data/companies.csv", "r") as f:
         return [
             Company(
                 id=int(line.split(",")[0]),
@@ -37,7 +36,7 @@ def display_search_results(filtered_candidates):
             with col:
                 if st.button(candidate.name, key=f"btn_{candidate.id}"):
                     st.session_state.selected_company = candidate
-                    st.session_state.company_name = candidate.name
+                    # st.session_state.company_name = candidate.name
                     st.rerun()
     else:
         st.write("一致する候補がありません")
