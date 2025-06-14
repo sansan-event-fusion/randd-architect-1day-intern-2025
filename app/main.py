@@ -96,7 +96,6 @@ import requests
 import streamlit as st
 from sklearn.cluster import KMeans
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.cluster import KMeans
 
 # 日本語フォント設定
 mpl.rcParams['font.family']        = 'sans-serif'
