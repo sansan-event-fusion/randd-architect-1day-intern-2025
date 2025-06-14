@@ -6,7 +6,7 @@ from streamlit_agraph import Config, Edge, Node, agraph
 
 
 def get_cards_count() -> int:
-    """ビジネスカードの総数を取得"""
+    """名刺の総数を取得"""
     url = "https://circuit-trial.stg.rd.ds.sansan.com/api/cards/count"
     response = requests.get(url, timeout=30)
     response.raise_for_status()
@@ -14,7 +14,7 @@ def get_cards_count() -> int:
 
 
 def get_all_cards() -> list[dict[str, Any]]:
-    """全ビジネスカードを取得"""
+    """全名刺を取得"""
     url = "https://circuit-trial.stg.rd.ds.sansan.com/api/cards/"
     response = requests.get(url, params={"offset": 0, "limit": get_cards_count()}, timeout=30)
     response.raise_for_status()
@@ -27,7 +27,7 @@ def select_cards(cards: list[dict[str, Any]], company_name: str) -> list[dict[st
 
 
 def get_all_contacts(owner_company_id: int) -> list[dict[str, Any]]:
-    """コンタクト関係を取得"""
+    """取引先関係を取得"""
     url = f"https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/owner_companies/{owner_company_id}"
     response = requests.get(url, params={"offset": 0, "limit": 100}, timeout=30)
     response.raise_for_status()
@@ -35,19 +35,19 @@ def get_all_contacts(owner_company_id: int) -> list[dict[str, Any]]:
 
 
 def create_connection_graph(cards: list[dict[str, Any]], contacts: list[dict[str, Any]], max_owners: int = 10) -> None:
-    """owner_user_idとuser_idの関係をグラフで可視化"""
+    """所有者と取引先の関係をグラフで可視化"""
     user_id_to_name = {card["user_id"]: card["full_name"] for card in cards}
 
-    # 接続先ユーザーの次数を計算
+    # 取引先の次数を計算
     target_degree: dict[int, int] = {}
     for contact in contacts:
         target_id = contact["user_id"]
         target_degree[target_id] = target_degree.get(target_id, 0) + 1
 
-    # 次数2以上の接続先ユーザーのみフィルタ
+    # 次数2以上の取引先のみフィルタ
     filtered_contacts = [c for c in contacts if target_degree[c["user_id"]] >= 2]
 
-    # カード所有者を最大数まで制限
+    # 名刺所有者を最大数まで制限
     owner_ids = list({c["owner_user_id"] for c in filtered_contacts})
     limited_owner_ids = owner_ids[:max_owners]
 
@@ -126,10 +126,10 @@ def create_connection_graph(cards: list[dict[str, Any]], contacts: list[dict[str
 
 
 def main():
-    st.title("📊 ビジネスカード接続関係の可視化")
+    st.title("📊 名刺交換関係の可視化")
 
     # データ取得
-    with st.spinner("💳 ビジネスカードデータを読み込んでいます..."):
+    with st.spinner("💳 名刺データを読み込んでいます..."):
         all_cards = get_all_cards()
 
     # 全会社名を取得
@@ -153,7 +153,7 @@ def main():
 
     company_name = st.sidebar.selectbox("🏢 分析対象の会社を選択", filtered_companies)
     max_owners = st.sidebar.slider(
-        "👥 表示する名刺所有者の最大数", 1, 50, 10, help="グラフの見やすさのため、表示する名刺所有者数を制限できます"
+        "👥 表示する所有者の最大数", 1, 50, 10, help="グラフの見やすさのため、表示する所有者数を制限できます"
     )
     cards = select_cards(all_cards, company_name)
 
@@ -176,9 +176,9 @@ def main():
     st.subheader(f"🌐 {company_name} の接続関係マップ")
     col1, col2 = st.columns(2)
     with col1:
-        st.info("🔴 赤いノード: 名刺所有者\n (選択した会社の社員)")
+        st.info("🔴 赤いノード: 所有者\n (選択した会社の社員)")
     with col2:
-        st.info("🔵 青いノード: 接続先の方\n (他社の方で複数の接続を持つ方)")
+        st.info("🔵 青いノード: 取引先")
     st.caption("💡 ヒント: ノードをクリックしてハイライト表示、ドラッグで位置調整ができます")
 
     # グラフ表示
@@ -188,7 +188,7 @@ def main():
     with st.expander("📋 生データの詳細を表示"):
         st.subheader("💳 名刺データサンプル")
         st.json(cards[:2])
-        st.subheader("🔗 接続データサンプル")
+        st.subheader("🔗 取引先データサンプル")
         st.json(contacts[:2])
 
 
