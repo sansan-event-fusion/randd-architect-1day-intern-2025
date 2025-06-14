@@ -1,6 +1,6 @@
 import pandas as pd
-import streamlit as st
 import requests
+import streamlit as st
 
 # タイトル
 st.title("営業先の新規開拓")
@@ -47,7 +47,6 @@ if st.button("検索"):
                 similer_response.raise_for_status()# エラーハンドリング
                 similer_data=similer_response.json()
                 similer_df=pd.DataFrame(similer_data)
-                
                 target_user = user_info_df[user_info_df["user_id"] == user_id]
                 user_name = target_user["full_name"].values[0] if not target_user.empty else "不明"
                 st.subheader(f"ユーザーID: {user_name} ({user_id}) の類似ユーザー情報")
