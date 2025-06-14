@@ -1,11 +1,5 @@
 import streamlit as st
-
-try:
-    # テスト実行時のabsolute import
-    from app.components import display_business_cards, display_contact_history
-except ImportError:
-    # Streamlit実行時のrelative import
-    from components import display_business_cards, display_contact_history
+from components import display_business_cards, display_contact_history
 
 
 def main() -> None:

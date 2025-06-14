@@ -1,12 +1,6 @@
 import pandas as pd
 import streamlit as st
-
-try:
-    # テスト実行時のabsolute import
-    from app.crud import ContactHistoryCRUD
-except ImportError:
-    # Streamlit実行時のrelative import
-    from crud import ContactHistoryCRUD
+from crud import ContactHistoryCRUD
 
 
 def display_contact_history() -> None:

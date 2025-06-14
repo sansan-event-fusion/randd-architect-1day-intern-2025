@@ -1,12 +1,6 @@
 import pandas as pd
 import streamlit as st
-
-try:
-    # テスト実行時のabsolute import
-    from app.crud import BusinessCardCRUD
-except ImportError:
-    # Streamlit実行時のrelative import
-    from crud import BusinessCardCRUD
+from crud import BusinessCardCRUD
 
 
 def display_business_cards() -> None:
