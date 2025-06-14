@@ -1,9 +1,14 @@
 # external imports
 
+import sys
+from pathlib import Path
+
 import streamlit as st
 
 # internal imports
 from components import display_business_cards, display_contact_history
+
+sys.path.append(str(Path(__file__).parent.parent))
 
 
 def main() -> None:
