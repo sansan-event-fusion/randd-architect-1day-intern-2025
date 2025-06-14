@@ -189,4 +189,80 @@ with st.form("search_form"):
         )
         st.plotly_chart(fig_year)
 
+        # 元のデータをセッションステートに保存（フィルタリングのリセット用）
+        if 'original_data' not in st.session_state:
+            st.session_state.original_data = owner_have_cards.copy()
+        
+        # フォームの外に絞り込み機能を追加
+if 'original_data' in st.session_state:
+    st.subheader("データの絞り込み")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    # ポジションによる絞り込み
+    with col1:
+        positions = ["すべて"] + sorted(st.session_state.original_data['position'].unique().tolist())
+        selected_position = st.selectbox("ポジション", positions)
+    
+    # 会社名による絞り込み
+    with col2:
+        companies = ["すべて"] + sorted(st.session_state.original_data['company_name'].unique().tolist())
+        selected_company = st.selectbox("会社名", companies)
+    
+    # 年による絞り込み
+    with col3:
+        years = ["すべて"] + sorted([str(year) for year in st.session_state.original_data['year'].unique()])
+        selected_year = st.selectbox("年", years)
+    
+    # 絞り込み条件の適用
+    filtered_data = st.session_state.original_data.copy()
+    
+    if selected_position != "すべて":
+        filtered_data = filtered_data[filtered_data['position'] == selected_position]
+        
+    if selected_company != "すべて":
+        filtered_data = filtered_data[filtered_data['company_name'] == selected_company]
+        
+    if selected_year != "すべて":
+        filtered_data = filtered_data[filtered_data['year'] == int(selected_year)]
+    
+    # フィルター結果を表示
+    st.write(f"絞り込み結果: {len(filtered_data)}件")
+    
+    if len(filtered_data) > 0:
+        st.dataframe(filtered_data[['user_id', 'full_name', 'phone_number', 'address', 'position', 'company_name', 'created_at']])
+        
+        # フィルタリングされたデータでグラフを再描画
+        if len(filtered_data) > 1:  # 複数のデータがある場合のみグラフ描画
+            # ポジションごとのグラフ（フィルタリング後）
+            filtered_position_counts = filtered_data['position'].value_counts()
+            fig_filtered = go.Figure(data=[go.Bar(x=filtered_position_counts.index, y=filtered_position_counts.values)])
+            fig_filtered.update_layout(title='絞り込み後: ポジションごとの名刺数', xaxis_title='ポジション', yaxis_title='名刺数')
+            st.plotly_chart(fig_filtered)
+            
+            # 会社ごとのグラフ（フィルタリング後）
+            filtered_company_counts = filtered_data['company_name'].value_counts()
+            fig_company_filtered = go.Figure(data=[go.Bar(x=filtered_company_counts.index, y=filtered_company_counts.values)])
+            fig_company_filtered.update_layout(title='絞り込み後: 会社ごとの名刺数', xaxis_title='会社名', yaxis_title='名刺数')
+            st.plotly_chart(fig_company_filtered)
+            
+            # 年ごとのグラフ（フィルタリング後）
+            filtered_year_counts = filtered_data['year'].value_counts().sort_index()
+            fig_year_filtered = go.Figure(data=[go.Bar(x=filtered_year_counts.index.astype(str), y=filtered_year_counts.values)])
+            fig_year_filtered.update_layout(
+                title='絞り込み後: 年別の名刺交換数', 
+                xaxis_title='年', 
+                yaxis_title='名刺数',
+                xaxis=dict(tickmode='linear')
+            )
+            st.plotly_chart(fig_year_filtered)
+    else:
+        st.info("絞り込み条件に一致するデータがありません。")
+    
+    # リセットボタン（フォームの外に配置）
+    if st.button("絞り込みをリセット"):
+        # セッション状態をクリアして再読み込み
+        st.session_state.pop('original_data', None)
+        st.experimental_rerun()
+
 
