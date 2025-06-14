@@ -42,6 +42,23 @@ def get_full_name_from_user_id(user_id: str) -> str:
     except (KeyError, ValueError, AttributeError):
         return f"Unknown ({user_id})"
 
+def get_user_details(user_id: str) -> dict:
+    """user_idからユーザー詳細情報を取得"""
+    try:
+        card_url = "https://circuit-trial.stg.rd.ds.sansan.com/api/cards/" + user_id
+        cards_df = fetch_api_data(card_url)
+        if cards_df is not None and not cards_df.empty:
+            return {
+                "full_name": str(cards_df["full_name"].iloc[0]),
+                "position": str(cards_df.get("position", ["N/A"]).iloc[0]),
+                "company_name": str(cards_df.get("company_name", ["N/A"]).iloc[0]),
+                "address": str(cards_df.get("address", ["N/A"]).iloc[0]),
+                "phone_number": str(cards_df.get("phone_number", ["N/A"]).iloc[0])
+            }
+        return {"full_name": f"Unknown ({user_id})", "position": "N/A", "company_name": "N/A", "address": "N/A", "phone_number": "N/A"}
+    except (KeyError, ValueError, AttributeError):
+        return {"full_name": f"Unknown ({user_id})", "position": "N/A", "company_name": "N/A", "address": "N/A", "phone_number": "N/A"}
+
 def fetch_similar_top10_users(user_id: str) -> pd.DataFrame:
     api_url = "https://circuit-trial.stg.rd.ds.sansan.com/api/cards/" + user_id + "/similar_top10_users"
     return fetch_api_data(api_url)
@@ -53,7 +70,7 @@ if full_name:
     user_id = get_user_id_from_full_name(full_name)
     if user_id:
         similar_top10_users_df = fetch_similar_top10_users(user_id)
-        st.dataframe(similar_top10_users_df)
+        # st.dataframe(similar_top10_users_df)
 
         # コンタクト履歴を取得
         contact_url = "https://circuit-trial.stg.rd.ds.sansan.com/api/contacts/owner_users/" + user_id
@@ -74,17 +91,38 @@ if full_name:
             for similar_id in similar_user_ids:
                 similar_user_name = get_full_name_from_user_id(similar_id)
 
-                # コンタクト履歴の有無で色を分ける
                 if similar_id in contact_user_ids:
-                    # コンタクト履歴あり - 緑色
+                    # コンタクト履歴あり
                     nodes.append(Node(id=similar_id, label=f"{similar_user_name}"))
-                    edges.append(Edge(source=user_id, target=similar_id, label="コンタクト済み"))
+                    edges.append(Edge(source=user_id, target=similar_id, label="コンタクト済み", width = 3))
                 else:
-                    # コンタクト履歴なし - 青色
+                    # コンタクト履歴なし
                     nodes.append(Node(id=similar_id, label=f"{similar_user_name}"))
 
             config = Config(width=800, height=600, directed=False, physics=True, hierarchical=False)
-            agraph(nodes=nodes, edges=edges, config=config)
+            return_value = agraph(nodes=nodes, edges=edges, config=config)
+
+            # ノードがクリックされた場合の詳細表示
+            if return_value:
+                clicked_node_id = return_value
+                if isinstance(clicked_node_id, str):
+                    st.subheader("選択されたユーザーの詳細情報")
+                    user_details = get_user_details(clicked_node_id)
+
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.write(f"**氏名**: {user_details['full_name']}")
+                        st.write(f"**役職**: {user_details['position']}")
+                        st.write(f"**会社名**: {user_details['company_name']}")
+                    with col2:
+                        st.write(f"**住所**: {user_details['address']}")
+                        st.write(f"**電話番号**: {user_details['phone_number']}")
+
+                    # コンタクト状況の表示
+                    if clicked_node_id in contact_user_ids:
+                        st.success("✅ コンタクト済み")
+                    else:
+                        st.info("📝 未コンタクト - コンタクトを検討してみませんか？")
 
 
         # st.subheader("あなたの全コンタクト履歴")
