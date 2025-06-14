@@ -24,6 +24,7 @@ def get_cards() -> pd.DataFrame:
 def main():
     try:
         df = get_cards()
+        print(len(df))
         print("Cards fetched successfully.")
         print(df.head())
     except Exception as e:

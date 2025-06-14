@@ -29,6 +29,7 @@ def main():
         df = get_owner_cards(owner_id)
         print("Owner cards fetched successfully.")
         print(df.head())
+        print(f"Total cards for owner {owner_id}: {len(df)}")
     except Exception as e:
         print(f"An error occurred: {e}")
 
