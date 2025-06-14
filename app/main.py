@@ -56,7 +56,6 @@ def get_contacts_count(start_date, end_date):
         st.error("APIの取得に失敗しました。")
         return 0
     return response.json()
-    
 # get_contacts_countの結果を週ごとに集計してグラフ化
 def plot_contacts_count_graph_by_week(start_date, end_date):
     week_list = weekly_date_range(start_date, end_date)
@@ -67,11 +66,12 @@ def plot_contacts_count_graph_by_week(start_date, end_date):
         count = get_contacts_count(start, end)
         contacts_count_list.append(count)
     result = pd.DataFrame({
-        "週": [f"{week_list[i].strftime('%Y-%m-%d')} - {week_list[i + 1].strftime('%Y-%m-%d')}" for i in range(len(week_list) - 1)],
+        "週": [f"{week_list[i].strftime('%Y-%m-%d')} - {week_list[i + 1].strftime('%Y-%m-%d')}" 
+              for i in range(len(week_list) - 1)],
         "名刺交換数": contacts_count_list
     })
     fig, ax = plt.subplots()
-    ax.plot(result["週"], result["名刺交換数"], marker='o')
+    ax.plot(result["週"], result["名刺交換数"], marker="o")
     ax.set_title("週ごとの名刺交換数")
     ax.set_xlabel("週")
     ax.set_ylabel("名刺交換数")
@@ -88,7 +88,8 @@ def plot_contacts_count_graph_by_month(start_date, end_date):
         contacts_count_list.append(count)
 
     result = pd.DataFrame({
-        "月": [f"{month_list[i].strftime('%Y-%m-%d')} - {month_list[i + 1].strftime('%Y-%m-%d')}" for i in range(len(month_list) - 1)],
+        "月": [f"{month_list[i].strftime('%Y-%m-%d')} - {month_list[i + 1].strftime('%Y-%m-%d')}" 
+                for i in range(len(month_list) - 1)],
         "名刺交換数": contacts_count_list
     })
 
