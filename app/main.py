@@ -12,6 +12,8 @@ def main():
     # タイトル
     st.title("サンプルアプリ")
 
+    get_user_info_by_id(1471907357)
+
     st.subheader("名前からユーザーIDを検索")
     name_input = st.text_input("名前を入力してください:", "")
 
@@ -24,14 +26,12 @@ def main():
     if user_id_input:
         get_exchanges(int(user_id_input))
 
-    
+
 def get_exchanges(user_id):
 
     params = {"offset": 0, "limit": 100}
     response = requests.get(f"{url_contacts}{user_id}", params=params)
     if response.status_code == 200:
-        st.success("APIリクエスト成功")
-        # st.json(response.json())
 
         df = pd.DataFrame(response.json())
         exchange_num = df.shape[0]
@@ -41,38 +41,76 @@ def get_exchanges(user_id):
         create_ranking(df)
         get_similar_person(most_recent_person)
 
-        
         return True
     else:
         st.error(f"APIリクエスト失敗: {response.status_code}")
         return False
-    
+
+
+def get_user_info_by_id(user_id):
+    response = requests.get(f"{url_cards}{user_id}")
+    if response.status_code == 200:
+        user_info = response.json()
+        if user_info and len(user_info) > 0:
+            return user_info[0]  # 全ての情報を返すように修正
+        return None
+    else:
+        st.error(f"APIリクエスト失敗: {response.status_code}")
+        return None
+
+
 def recent_exchanges(df):
-    df['created_at'] = pd.to_datetime(df['created_at'])
-    df_sorted = df.sort_values('created_at', ascending=False)
-    
+    df["created_at"] = pd.to_datetime(df["created_at"])
+    df_sorted = df.sort_values("created_at", ascending=False)
+
     # 最近の交換相手（最新10件）
     st.subheader("最近の名刺交換相手")
-    recent_exchanges = df_sorted[['user_id', 'company_id', 'created_at']].head(10)
-    recent_exchanges['created_at'] = recent_exchanges['created_at'].dt.strftime('%Y-%m-%d %H:%M')
-    st.dataframe(recent_exchanges)
-    
+    recent_exchanges = df_sorted[["user_id", "company_id", "created_at"]].head(10)
+
+    # 各user_idの詳細情報を取得して名前と会社名を表示
+    detailed_exchanges = []
+    for _, row in recent_exchanges.iterrows():
+        user_id = row["user_id"]
+        user_info = get_user_info_by_id(user_id)
+
+        if user_info:
+            detailed_exchanges.append(
+                {
+                    "full_name": user_info.get("full_name", "不明"),
+                    "company_name": user_info.get("company_name", "不明"),
+                    "created_at": row["created_at"].strftime("%Y-%m-%d %H:%M"),
+                }
+            )
+        else:
+            detailed_exchanges.append(
+                {
+                    "full_name": "不明",
+                    "company_name": "不明",
+                    "created_at": row["created_at"].strftime("%Y-%m-%d %H:%M"),
+                }
+            )
+
+    if detailed_exchanges:
+        df_detailed = pd.DataFrame(detailed_exchanges)
+        st.dataframe(df_detailed)
+
     most_recent_person = recent_exchanges.iloc[0]["user_id"]
     return most_recent_person
-        
-def create_ranking(df):
-        # 会社別のランキングも作成
-        company_ranking = df["company_id"].value_counts().reset_index()
-        company_ranking.columns = ["company_id", "exchange_count"]
-        company_ranking.index = company_ranking.index + 1
 
-        st.subheader("会社別名刺交換ランキング")
-        st.dataframe(company_ranking.head(10))
+
+def create_ranking(df):
+    # 会社別のランキングも作成
+    company_ranking = df["company_id"].value_counts().reset_index()
+    company_ranking.columns = ["company_id", "exchange_count"]
+    company_ranking.index = company_ranking.index + 1
+
+    st.subheader("会社別名刺交換ランキング")
+    st.dataframe(company_ranking.head(10))
+
 
 def get_similar_person(user_id):
     response = requests.get(f"{url_cards}{user_id}/similar_top10_users")
     if response.status_code == 200:
-        st.success("類似ユーザー取得完了")
         similar_users = response.json()
 
         if similar_users and len(similar_users) > 0:
