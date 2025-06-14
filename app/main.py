@@ -1,12 +1,22 @@
-from pathlib import Path
+import os
 
-import pandas as pd
 import streamlit as st
 
-# タイトル
-st.title("サンプルアプリ")
+from app.views import dashboard_view, search_view
 
-path = Path(__file__).parent / "dummy_data.csv"
-df_dummy = pd.read_csv(path, dtype=str)
+os.environ["BASE_URL"] = "https://circuit-trial.stg.rd.ds.sansan.com"
+os.environ["OWN_COMPANY_ID"] = "6185710340"
 
-st.dataframe(df_dummy)
+st.set_page_config(
+    page_title="企業間つながり分析検索ツール",
+    page_icon="🧊",
+    layout="wide",
+)
+
+st.title("企業間つながり分析検索ツール")
+
+
+selected_company = search_view()
+if selected_company:
+    st.divider()
+    dashboard_view(selected_company)
