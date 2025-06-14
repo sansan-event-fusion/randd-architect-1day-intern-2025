@@ -166,4 +166,4 @@ st.pyplot(fig)
 
 # 元データプレビュー
 if st.checkbox("クラスタ結果を表示"):
-    st.dataframe(df[['company_name','cluster']])
+    st.dataframe(df[["company_name","cluster"]])
