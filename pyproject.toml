@@ -25,6 +25,7 @@ warn_unused_configs = true
 warn_unused_ignores = true
 warn_redundant_casts = true
 ignore_missing_imports = true
+cache_dir = "~/.cache/mypy"
 
 [tool.ruff]
 target-version = "py313"
@@ -50,6 +51,7 @@ exclude = [
     ".venv",
     "__pycache__",
 ]
+cache-dir = "~/.cache/ruff"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*" = [
@@ -61,3 +63,6 @@ exclude = [
 
 [tool.ruff.lint.mccabe]
 max-complexity = 5
+
+[tool.pytest.ini_options]
+cache_dir = "~/.cache/pytest"
